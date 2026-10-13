@@ -29,7 +29,8 @@ preserving existing language semantics and compiler behavior.
 
 Experimental.
 
-This repository is not intended for production use. Once feature parity and stability are achieved, the Rust frontend will be merged into the main `nxd_language` repository.
+This repository is a frontend migration and validation environment.
+The Python frontend in the `nxd_language` repository remains the reference implementation until feature parity and stability have been demonstrated. Once stability has been demonstrated, the new code will be migrated into the `nxd_language` repository to be a replacement implementation for the current Python frontend. 
 
 ## Validation Strategy
 
