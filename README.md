@@ -6,6 +6,16 @@ This project reimplements the existing Python lexer, parser, and AST pipeline fr
 
 The current Python frontend serves as the reference implementation while functionality is ported and validated through parity testing.
 
+##Background
+
+NXD currently uses a Python frontend and a Rust compiler core connected through
+a JSON AST handoff. While this architecture enabled rapid language development,
+it also requires maintaining compiler structures across language boundaries and
+introduces additional serialization, debugging, and synchronization overhead.
+
+The goal of this project is to evaluate a fully Rust-based frontend while
+preserving existing language semantics and compiler behavior.
+
 ## Goals
 
 - Rust lexer
