@@ -1,0 +1,23 @@
+# Rust
+/target
+Cargo.lock
+
+# VS Code
+.vscode/
+
+# Python (comparison scripts)
+__pycache__/
+*.pyc
+
+# Generated artifacts
+*.json
+*.ast
+*.ir
+
+# Test outputs
+/output
+/generated
+
+# OS
+.DS_Store
+Thumbs.db
