@@ -6,7 +6,7 @@ This project reimplements the existing Python lexer, parser, and AST pipeline fr
 
 The current Python frontend serves as the reference implementation while functionality is ported and validated through parity testing.
 
-##Background
+## Background
 
 NXD currently uses a Python frontend and a Rust compiler core connected through
 a JSON AST handoff. While this architecture enabled rapid language development,
