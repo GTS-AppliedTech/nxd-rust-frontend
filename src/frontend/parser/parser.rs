@@ -11,7 +11,7 @@ pub struct ParserError {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DIagnosticSeverity {
+pub enum DiagnosticSeverity {
     Error,
     Warning,
 }
@@ -60,7 +60,7 @@ pub struct Parser {
     pub pos: usize,
     pub indent_stack: Vec<usize>,
     pub errors: Vec<ParserError>,
-    pub warnings: Vec<WarningDiagnostic>
+    pub warnings: Vec<WarningDiagnostic>,
     pub recover_errors: bool,
 }
 
@@ -76,6 +76,7 @@ impl Parser {
             pos: 0,
             indent_stack: vec![0],
             errors: Vec::new(),
+            warnings: Vec::new(),
             recover_errors,
         })
     }
