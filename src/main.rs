@@ -2,6 +2,7 @@ mod orchestrator;
 mod ir;
 mod backend;
 mod semantic;
+mod frontend;
 
 
 use std::env;

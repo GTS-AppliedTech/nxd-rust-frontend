@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TokenKind {
     Newline,
     Skip,
@@ -36,7 +36,7 @@ pub const TOKEN_SPEC: &[TokenRule] = &[
     // TODO: Verify string regex translation
     TokenRule {
         kind: TokenKind::String,
-        pattern: r"\"([^\"\\]|\\.)*\"",
+        pattern: r#"\"([^\"\\]|\\.)*\""#,
     },
     TokenRule {
         kind: TokenKind::Number,
