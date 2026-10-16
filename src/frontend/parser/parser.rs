@@ -245,16 +245,82 @@ impl Parser {
     }
 
     pub fn parse_top_level(
+    &mut self,
+    ) -> Result<AstNode, ParserError> {
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("TYPE"),
+        ) {
+            return self.parse_type_decl();
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("TRAIT"),
+        ) {
+            return self.parse_trait_decl();
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("IMPL"),
+        ) {
+            return self.parse_impl_decl();
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("ASYNC"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("ASYNC"),
+            )?;
+
+            let is_async = true;
+
+            return self.parse_func_decl(is_async);
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("FUNC"),
+        ) {
+            let is_async = false;
+
+            return self.parse_func_decl(is_async);
+        }
+
+        self.parse_statement()
+    }
+
+    // Declarations
+
+    pub fn parse_type_decl(
+    &mut self,
+    ) -> Result<AstNode, ParserError> {
+        todo!()
+    }
+
+    pub fn parse_trait_decl(
         &mut self,
     ) -> Result<AstNode, ParserError> {
         todo!()
     }
 
-    // Declarations
-
-    pub fn parse_function() {
+    pub fn parse_impl_decl(
+        &mut self,
+    ) -> Result<AstNode, ParserError> {
         todo!()
     }
+
+    pub fn parse_func_decl(
+        &mut self,
+        is_async: bool,
+    ) -> Result<AstNode, ParserError> {
+        todo!()
+    }
+
 
     pub fn parse_struct() {
         todo!()
@@ -275,6 +341,12 @@ impl Parser {
     }
 
     pub fn parse_match() {
+        todo!()
+    }
+
+    pub fn parse_statement(
+        &mut self,
+    ) -> Result<AstNode, ParserError> {
         todo!()
     }
 
