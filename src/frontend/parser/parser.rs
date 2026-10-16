@@ -1,6 +1,7 @@
 use crate::frontend::lexer::scanner::lex;
 use crate::frontend::lexer::token::Token;
-use crate::frontend::ast::nodes::SourceSpan;
+use crate::frontend::ast::nodes::*;
+use crate::frontend::lexer::token_kind::TokenKind;
 
 #[derive(Debug, Clone)]
 pub struct ParserError {
@@ -65,6 +66,9 @@ pub struct Parser {
 }
 
 impl Parser {
+
+    // Constructor
+
     pub fn new(
         src: &str,
         recover_errors: bool,
@@ -80,6 +84,207 @@ impl Parser {
             recover_errors,
         })
     }
+
+    // Navigation helpers
+
+    pub fn current(&self) -> Option<&Token> {
+        self.tokens.get(self.pos)
+    }
+
+    pub fn peek(&self, offset: usize) -> Option<&Token> {
+        self.tokens.get(self.pos + offset)
+    }
+
+    pub fn advance(&mut self) {
+        if self.pos < self.tokens.len() {
+            self.pos += 1;
+        }
+    }
+
+    pub fn at_end(&self) -> bool {
+        match self.current() {
+            Some(token) => token.kind == TokenKind::Eof,
+            None => true,
+        }
+    }
+
+    // Token checking helpers
+
+    pub fn at(
+        &self,
+        kind: Option<TokenKind>,
+        lexeme: Option<&str>,
+    ) -> bool {
+        let Some(token) = self.current() else {
+            return false;
+        };
+
+        if let Some(expected_kind) = kind {
+            if token.kind != expected_kind {
+                return false;
+            }
+        }
+
+        if let Some(expected_lexeme) = lexeme {
+            if token.lexeme != expected_lexeme {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    pub fn eat(
+        &mut self,
+        kind: Option<TokenKind>,
+        lexeme: Option<&str>,
+    ) -> Result<Token, ParserError> {
+        let token = self.current()
+            .cloned()
+            .ok_or_else(|| {
+                ParserError::new(
+                    "NXD-P1000",
+                    "Unexpected end of input",
+                    SourceSpan {
+                        line: 0,
+                        column: 0,
+                        end_line: 0,
+                        end_column: 0,
+                    },
+                )
+            })?;
+        if !self.at(kind, lexeme) {
+            return Err(
+                ParserError::new(
+                    "NXD-P1001",
+                    format!(
+                        "unexpected token '{}'",
+                        token.lexeme
+                    ),
+                    token.span(),
+                )
+            );
+        }
+
+        self.advance();
+
+        Ok(token)
+    }
+
+    // Parser entry points
+
+    pub fn parse_program(
+        &mut self,
+    ) -> Result<AstModule, ParserError> {
+        while self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("MODULE"),
+        ) {
+            return self.parse_module();
+        }
+        
+        let mut imports: Vec<AstImport> = Vec::new();
+        let mut body: Vec<AstNode> = Vec::new();
+
+        while !self.at(
+            Some(TokenKind::Eof),
+            None,
+        ) {
+            if self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+
+                continue;
+            }
+
+            if self.at(
+                Some(TokenKind::Keyword),
+                Some("IMPORT"),
+            ) {
+                imports.push(self.parse_import()?);
+                continue;   
+            }
+
+            let node = self.parse_top_level()?;
+                body.push(node);
+        }
+
+        Ok(AstModule {
+            name: "ANONYMOUS".to_string(),
+            imports,
+            body,
+        })
+    }
+
+    // Top level grammer
+
+    pub fn parse_module(
+        &mut self,
+    ) -> Result<AstModule, ParserError> {
+        todo!()
+    }
+
+    pub fn parse_import(
+        &mut self
+    ) -> Result<AstImport, ParserError> {
+        todo!()
+    }
+
+    pub fn parse_top_level(
+        &mut self,
+    ) -> Result<AstNode, ParserError> {
+        todo!()
+    }
+
+    // Declarations
+
+    pub fn parse_function() {
+        todo!()
+    }
+
+    pub fn parse_struct() {
+        todo!()
+    }
+
+    pub fn parse_enum() {
+        todo!()
+    }
+
+    // Statements
+
+    pub fn parse_if() {
+        todo!()
+    }
+
+    pub fn parse_loop() {
+        todo!()
+    }
+
+    pub fn parse_match() {
+        todo!()
+    }
+
+    // Expressions
+
+    pub fn parse_expr() {
+        todo!()
+    }
+    
+
 }
 
 #[cfg(test)]
