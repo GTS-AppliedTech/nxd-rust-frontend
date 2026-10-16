@@ -239,9 +239,50 @@ impl Parser {
     }
 
     pub fn parse_import(
-        &mut self
+        &mut self,
     ) -> Result<AstImport, ParserError> {
-        todo!()
+
+        let import_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("IMPORT"),
+        )?;
+
+        let path_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let mut alias = None;
+        let mut end_span = path_token.span();
+
+        if self.at(
+            Some(TokenKind::Op),
+            Some("AS"),
+        ) {
+            self.eat(
+                Some(TokenKind::Op),
+                Some("AS"),
+            )?;
+
+            let alias_token = self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?;
+
+            end_span = alias_token.span();
+            alias = Some(alias_token.lexeme);
+        }
+
+        Ok(AstImport {
+            path: path_token.lexeme,
+            alias,
+            span: SourceSpan {
+                line: import_token.line,
+                column: import_token.column,
+                end_line: end_span.end_line,
+                end_column: end_span.end_column,
+            },
+        })
     }
 
     pub fn parse_top_level(
@@ -297,9 +338,70 @@ impl Parser {
     // Declarations
 
     pub fn parse_type_decl(
-    &mut self,
+        &mut self,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("TYPE"),
+        )?;
+
+        let name_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let name = name_token.lexeme;
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("ENUM"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("ENUM"),
+            )?;
+
+            return self.parse_enum_type(name);
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("UNION"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("UNION"),
+            )?;
+
+            return self.parse_union_type(name);
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("TRAIT"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("TRAIT"),
+            )?;
+
+            return self.parse_trait_type(name);
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("STRUCT"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("STRUCT"),
+            )?;
+
+            return self.parse_struct_type(name);
+        }
+
+        todo!("NXD-P1003");
     }
 
     pub fn parse_trait_decl(
@@ -321,12 +423,31 @@ impl Parser {
         todo!()
     }
 
-
-    pub fn parse_struct() {
+    pub fn parse_enum_type(
+        &mut self,
+        name: String,
+    ) -> Result<AstNode, ParserError> {
         todo!()
     }
 
-    pub fn parse_enum() {
+    pub fn parse_union_type(
+        &mut self,
+        name: String,
+    ) -> Result<AstNode, ParserError> {
+        todo!()
+    }
+
+    pub fn parse_trait_type(
+        &mut self,
+        name: String,
+    ) -> Result<AstNode, ParserError> {
+        todo!()
+    }
+
+    pub fn parse_struct_type(
+        &mut self,
+        name: String,
+    ) -> Result<AstNode, ParserError> {
         todo!()
     }
 

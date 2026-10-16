@@ -23,6 +23,7 @@ pub struct AstModule {
 pub struct AstImport {
     pub path: String,
     pub alias: Option<String>,
+    pub span: SourceSpan,
 }
 
 // =========================================
