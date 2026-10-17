@@ -2,6 +2,7 @@ use crate::frontend::lexer::scanner::lex;
 use crate::frontend::lexer::token::Token;
 use crate::frontend::ast::nodes::*;
 use crate::frontend::lexer::token_kind::TokenKind;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct ParserError {
@@ -1420,11 +1421,320 @@ impl Parser {
 
     // Expressions
 
-    pub fn parse_expr() {
+    pub fn parse_expr(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
         todo!()
     }
-    
+   
+    pub fn parse_literal(
+        &mut self,
+    ) -> Result<AstLiteral, ParserError> {
+        let token = self.current()
+            .expect("parse_literal called at EOF");
 
+        if token.kind == TokenKind::Number {
+            let value = self.eat(
+                Some(TokenKind::Number),
+                None,
+            )?;
+
+            if value.lexeme.contains('.') {
+                return Ok(
+                    AstLiteral::Float(
+                        value.lexeme.parse::<f64>().unwrap()
+                    )
+                );
+            }
+
+            return Ok(
+                AstLiteral::Int(
+                    value.lexeme.parse::<i64>().unwrap()
+                )
+            );
+        }
+
+        if token.kind == TokenKind::String {
+            let value = self.eat(
+                Some(TokenKind::String),
+                None,
+            )?;
+
+            return Ok(
+                AstLiteral::String(
+                    value.lexeme[1..value.lexeme.len() - 1]
+                        .to_string()
+                )
+            );
+        }
+
+        if token.kind == TokenKind::LowName {
+            let value = self.eat(
+                Some(TokenKind::LowName),
+                None,
+            )?;
+
+            match value.lexeme.as_str() {
+                "true" => {
+                    return Ok(AstLiteral::Bool(true));
+                }
+
+                "false" => {
+                    return Ok(AstLiteral::Bool(false));
+                }
+
+                "none" => {
+                    return Ok(AstLiteral::None);
+                }
+
+                _ => {}
+            }
+        }
+
+        let token = self.current()
+            .unwrap();
+
+        Err(
+            ParserError::new(
+                "NXD-P1009",
+                format!(
+                    "NXD-P1009: Literal expected, got {:?} {}",
+                    token.kind,
+                    token.lexeme
+                ),
+                token.span(),
+            )
+        )
+    }
+
+    pub fn parse_list_literal(
+        &mut self,
+    ) -> Result<AstLiteral, ParserError> {
+        self.eat(
+            Some(TokenKind::LBrack),
+            None,
+        )?;
+
+        let mut items: Vec<AstExpr> = Vec::new();
+
+        while !self.at(
+            Some(TokenKind::RBrack),
+            None,
+        ) {
+            items.push(
+                self.parse_expr()?
+            );
+
+            if self.at(
+                Some(TokenKind::Comma),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Comma),
+                    None,
+                )?;
+            }
+        }
+
+        self.eat(
+            Some(TokenKind::RBrack),
+            None,
+        )?;
+
+        Ok(
+            AstLiteral::List(items)
+        )
+    }
+
+    pub fn parse_object_init(
+        &mut self,
+    ) -> Result<AstObjectInit, ParserError> {
+        let type_name = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?.lexeme;
+
+        let map_literal = self.parse_map_literal()?;
+
+        match map_literal {
+            AstLiteral::Map(fields) => {
+                Ok(
+                    AstObjectInit {
+                        type_name,
+                        fields,
+                    }
+                )
+            }
+
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn parse_map_literal(
+        &mut self,
+    ) -> Result<AstLiteral, ParserError> {
+        self.eat(Some(TokenKind::LBrace), None)?;
+
+        let mut entries = HashMap::new();
+
+        while !self.at(
+            Some(TokenKind::RBrace),
+            None,
+        ) {
+            while self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+
+                if self.at(
+                    Some(TokenKind::RBrace),
+                    None,
+                ) {
+                    break;
+                }
+            }
+
+            // key parsing...
+
+            // parse_expr()...
+
+            // insert into hashmap...
+        }
+
+        self.eat(
+            Some(TokenKind::RBrace),
+            None,
+        )?;
+
+        Ok(
+            AstLiteral::Map(entries)
+        )
+    }
+
+}
+
+pub fn parse(
+    src: &str,
+) -> Result<
+    (
+        AstModule,
+        Vec<AstNode>,
+        Vec<AstFunction>,
+    ),
+    ParserError,
+> {
+    let mut parser = Parser::new(
+        src,
+        false,
+    ).map_err(|message| {
+        ParserError::new(
+            "NXD-P1099",
+            message,
+            SourceSpan {
+                line: 0,
+                column: 0,
+                end_line: 0,
+                end_column: 0,
+            },
+        )
+    })?;
+
+    let module = parser.parse_program()?;
+
+    let mut ast_types = Vec::new();
+    let mut ast_functions = Vec::new();
+    let mut ast_statements = Vec::new();
+
+    for node in &module.body {
+        match node {
+            AstNode::Struct(_)
+            | AstNode::Enum(_)
+            | AstNode::Union(_)
+            | AstNode::Trait(_)
+            | AstNode::Impl(_) => {
+                ast_types.push(node.clone());
+            }
+
+            AstNode::Function(function) => {
+                ast_functions.push(function.clone());
+            }
+
+            AstNode::Statement(statement) => {
+                ast_statements.push(statement.clone());
+            }
+        }
+    }
+
+    Ok((
+        module,
+        ast_types,
+        ast_functions,
+    ))
+}
+
+pub fn parse_with_diagnostics(
+    src: &str,
+) -> Result<
+    (
+        AstModule,
+        Vec<AstNode>,
+        Vec<AstFunction>,
+        Vec<ParserError>,
+    ),
+    ParserError,
+> {
+    let mut parser = Parser::new(
+        src,
+        true,
+    ).map_err(|message| {
+        ParserError::new(
+            "NXD-P1099",
+            message,
+            SourceSpan {
+                line: 0,
+                column: 0,
+                end_line: 0,
+                end_column: 0,
+            },
+        )
+    })?;
+
+    let module = parser.parse_program()?;
+
+    let mut ast_types = Vec::new();
+    let mut ast_functions = Vec::new();
+    let mut ast_statements = Vec::new();
+
+    for node in &module.body {
+        match node {
+            AstNode::Struct(_)
+            | AstNode::Enum(_)
+            | AstNode::Union(_)
+            | AstNode::Trait(_)
+            | AstNode::Impl(_) => {
+                ast_types.push(node.clone());
+            }
+
+            AstNode::Function(function) => {
+                ast_functions.push(function.clone());
+            }
+
+            AstNode::Statement(statement) => {
+                ast_statements.push(statement.clone());
+            }
+        }
+    }
+
+    Ok((
+        module,
+        ast_types,
+        ast_functions,
+        parser.errors,
+    ))
 }
 
 #[cfg(test)]

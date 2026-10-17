@@ -199,13 +199,14 @@ pub enum AstLiteral {
     String(String),
     Bool(bool),
     None,
-    List(Vec<AstLiteral>),
+    List(Vec<AstExpr>),
+    Map(HashMap<String, AstExpr>),
 }
 
 #[derive(Clone, Debug)]
 pub struct AstObjectInit {
     pub type_name: String,
-    fields: HashMap<String, AstExpr>,
+    pub fields: HashMap<String, AstExpr>,
 }
 
 #[derive(Clone, Debug)]
