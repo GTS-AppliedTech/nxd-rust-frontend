@@ -67,6 +67,36 @@ pub struct Parser {
 
 impl Parser {
 
+    pub fn report_error(
+        &mut self,
+        error: ParserError,
+    ) {
+        self.errors.push(error);
+    }
+
+    pub fn synchronize(
+        &mut self,
+    ) {
+        while !self.at(
+            Some(TokenKind::Eof),
+            None,
+        ) {
+            if self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                let _ = self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                );
+
+                return;
+            }
+
+            self.pos += 1;
+        }
+    }
+
     // Constructor
 
     pub fn new(
