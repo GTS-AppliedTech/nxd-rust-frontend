@@ -134,6 +134,16 @@ impl Parser {
         true
     }
 
+    pub fn next_is(
+        &self,
+        kind: TokenKind,
+    ) -> bool {
+        match self.peek(1) {
+            Some(token) => token.kind == kind,
+            None => false,
+        }
+    }
+
     pub fn eat(
         &mut self,
         kind: Option<TokenKind>,
@@ -427,28 +437,422 @@ impl Parser {
         &mut self,
         name: String,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+
+        self.eat(
+            Some(TokenKind::Colon),
+            None,
+        )?;
+
+        while self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+
+        let mut variants: Vec<String> = Vec::new();
+
+        while self.at(
+            Some(TokenKind::Ident),
+            None,
+        ) {
+
+            let variant = self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?;
+
+            variants.push(
+                variant.lexeme,
+            );
+
+            if self.at(
+                Some(TokenKind::Comma),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Comma),
+                    None,
+                )?;
+            }
+
+            while self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+            }
+        }
+
+        Ok(
+            AstNode::Enum(
+                AstEnum {
+                    name,
+                    variants,
+                }
+            )
+        )
     }
 
     pub fn parse_union_type(
         &mut self,
         name: String,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+        self.eat(
+            Some(TokenKind::Colon),
+            None,
+        )?;
+
+        while self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+
+        let mut variants: Vec<AstUnionVariant> = Vec::new();
+
+        while self.at(
+            Some(TokenKind::Ident),
+            None,
+        ) {
+            let kind_token = self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?;
+
+            let kind = kind_token.lexeme;
+
+            self.eat(
+                Some(TokenKind::LBrace),
+                None,
+            )?;
+
+            let mut fields: Vec<AstField> = Vec::new();
+
+            while self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+            }
+
+            while !self.at(
+                Some(TokenKind::RBrace),
+                None,
+            ) {
+                if self.at(
+                    Some(TokenKind::Newline),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::Newline),
+                        None,
+                    )?;
+
+                    continue;
+                }
+
+                let field_name_token = self.eat(
+                    Some(TokenKind::Ident),
+                    None,
+                )?;
+
+                self.eat(
+                    Some(TokenKind::Colon),
+                    None,
+                )?;
+
+                let field_type = self.parse_type_ref()?;
+
+                fields.push(AstField {
+                    name: field_name_token.lexeme,
+                    ty: field_type,
+                });
+
+                if self.at(
+                    Some(TokenKind::Comma),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::Comma),
+                        None,
+                    )?;
+                }
+            }
+
+            self.eat(
+                Some(TokenKind::RBrace),
+                None,
+            )?;
+
+            variants.push(AstUnionVariant {
+                kind,
+                fields,
+            });
+
+            while self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+            }
+        }
+
+        Ok(AstNode::Union(AstUnion {
+            name,
+            variants,
+        }))
     }
 
     pub fn parse_trait_type(
         &mut self,
         name: String,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+        self.eat(
+            Some(TokenKind::Colon),
+            None,
+        )?;
+
+        while self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+
+        let mut methods: Vec<AstFunctionSignature> = Vec::new();
+
+        while self.at(
+            Some(TokenKind::Keyword),
+            Some("FUNC"),
+        ) {
+            let func_token = self.eat(
+                Some(TokenKind::Keyword),
+                Some("FUNC"),
+            )?;
+
+            let method_name_token = self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?;
+
+            let method_name = method_name_token.lexeme;
+
+            self.eat(
+                Some(TokenKind::LParen),
+                None,
+            )?;
+
+            let mut params: Vec<String> = Vec::new();
+
+            if !self.at(
+                Some(TokenKind::RParen),
+                None,
+            ) {
+                let parameter_token = self.eat(
+                    Some(TokenKind::Ident),
+                    None,
+                )?;
+
+                params.push(parameter_token.lexeme);
+
+                while self.at(
+                    Some(TokenKind::Comma),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::Comma),
+                        None,
+                    )?;
+
+                    let parameter_token = self.eat(
+                        Some(TokenKind::Ident),
+                        None,
+                    )?;
+
+                    params.push(parameter_token.lexeme);
+                }
+            }
+
+            let rparen_token = self.eat(
+                Some(TokenKind::RParen),
+                None,
+            )?;
+
+            let mut return_type: Option<String> = None;
+            let mut end_span = rparen_token.span();
+
+            if self.at(
+                Some(TokenKind::Colon),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Colon),
+                    None,
+                )?;
+
+                let return_type_token = if self.at(
+                    Some(TokenKind::LowType),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::LowType),
+                        None,
+                    )?
+                } else {
+                    self.eat(
+                        Some(TokenKind::Ident),
+                        None,
+                    )?
+                };
+
+                end_span = return_type_token.span();
+                return_type = Some(return_type_token.lexeme);
+            }
+
+            methods.push(AstFunctionSignature {
+                name: method_name,
+                span: SourceSpan {
+                    line: func_token.line,
+                    column: func_token.column,
+                    end_line: end_span.end_line,
+                    end_column: end_span.end_column,
+                },
+                params,
+                return_type,
+            });
+
+            while self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+            }
+        }
+
+        Ok(AstNode::Trait(AstTrait {
+            name,
+            methods,
+        }))
     }
 
     pub fn parse_struct_type(
         &mut self,
         name: String,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+        self.eat(
+            Some(TokenKind::Colon),
+            None,
+        )?;
+
+        while self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+
+        let mut fields: Vec<AstField> = Vec::new();
+
+        while self.at(
+            Some(TokenKind::Ident),
+            None,
+        ) && self.next_is(TokenKind::Colon)
+        {
+            let field_name_token = self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?;
+
+            self.eat(
+                Some(TokenKind::Colon),
+                None,
+            )?;
+
+            let field_type = self.parse_type_ref()?;
+
+            if self.at(
+                Some(TokenKind::Comma),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Comma),
+                    None,
+                )?;
+            }
+
+            fields.push(AstField {
+                name: field_name_token.lexeme,
+                ty: field_type,
+            });
+
+            while self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+            }
+        }
+
+        Ok(AstNode::Struct(
+            AstStruct {
+                name,
+                fields,
+            },
+        ))
+    }
+
+
+    pub fn parse_type_ref(
+        &mut self,
+    ) -> Result<String, ParserError> {
+
+        if self.at(
+            Some(TokenKind::LowType),
+            None,
+        ) {
+            let token = self.eat(
+                Some(TokenKind::LowType),
+                None,
+            )?;
+
+            return Ok(token.lexeme);
+        }
+
+        let token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        Ok(token.lexeme)
     }
 
     // Statements

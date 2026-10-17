@@ -71,7 +71,7 @@ pub struct AstFunctionSignature {
     pub name: String,
     pub span: SourceSpan,
     pub params: Vec<String>,
-    pub return_type: String, 
+    pub return_type: Option<String>, 
 }
 
 // =========================================
