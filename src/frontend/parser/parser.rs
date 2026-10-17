@@ -1401,13 +1401,6 @@ impl Parser {
 
     // Statements
 
-    pub fn parse_if() {
-        todo!()
-    }
-
-    pub fn parse_loop() {
-        todo!()
-    }
 
     pub fn parse_match() {
         todo!()
@@ -1418,6 +1411,341 @@ impl Parser {
     ) -> Result<AstStatement, ParserError> {
         todo!()
     }
+
+    pub fn parse_clone(
+        &mut self,
+    ) -> Result<AstClone, ParserError> {
+
+        let token = self.current()
+            .cloned()
+            .unwrap();
+
+        if token.lexeme != "CLONE" {
+            return Err(
+                ParserError::new(
+                    "NXD-P1004",
+                    format!(
+                        "NXD-P1004: Expected CLONE, got {:?} {}",
+                        token.kind,
+                        token.lexeme
+                    ),
+                    token.span(),
+                )
+            );
+        }
+
+        self.eat(
+            Some(TokenKind::Op),
+            Some("CLONE"),
+        )?;
+
+        if !self.at(
+            Some(TokenKind::Ident),
+            None,
+        ) {
+            let token = self.current()
+                .cloned()
+                .unwrap();
+
+            return Err(
+                ParserError::new(
+                    "NXD-P1005",
+                    format!(
+                        "NXD-P1005: Expected source identifier after CLONE, got {:?} {}",
+                        token.kind,
+                        token.lexeme
+                    ),
+                    token.span(),
+                )
+            );
+        }
+
+        let source_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let source = AstExpr::Var(
+            AstVar {
+                name: source_token.lexeme,
+                line: source_token.line,
+                column: source_token.column,
+            }
+        );
+
+        if !(
+            self.at(
+                Some(TokenKind::Ident),
+                None,
+            )
+            && self.current()
+                .map(|token| token.lexeme.as_str())
+                == Some("TO")
+        ) {
+            let token = self.current()
+                .cloned()
+                .unwrap();
+
+            return Err(
+                ParserError::new(
+                    "NXD-P1006",
+                    format!(
+                        "NXD-P1006: Expected TO after CLONE source, got {:?} {}",
+                        token.kind,
+                        token.lexeme
+                    ),
+                    token.span(),
+                )
+            );
+        }
+
+        self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        if !self.at(
+            Some(TokenKind::Ident),
+            None,
+        ) {
+            let token = self.current()
+                .cloned()
+                .unwrap();
+
+            return Err(
+                ParserError::new(
+                    "NXD-P1007",
+                    format!(
+                        "NXD-P1007: Expected target identifier after TO, got {:?} {}",
+                        token.kind,
+                        token.lexeme
+                    ),
+                    token.span(),
+                )
+            );
+        }
+
+        let target_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let target = AstExpr::Var(
+            AstVar {
+                name: target_token.lexeme,
+                line: target_token.line,
+                column: target_token.column,
+            }
+        );
+
+        Ok(
+            AstClone {
+                source,
+                target,
+            }
+        )
+    }
+
+    pub fn parse_let(
+        &mut self,
+    ) -> Result<AstLet, ParserError> {
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("LET"),
+        )?;
+
+        let ident_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let name = ident_token.lexeme.clone();
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("SET"),
+        )?;
+
+        let value = self.parse_expr()?;
+
+        Ok(
+            AstLet {
+                name,
+                value,
+                line: ident_token.line,
+                column: ident_token.column,
+            }
+        )
+    }
+
+    pub fn parse_const(
+        &mut self,
+    ) -> Result<AstConst, ParserError> {
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("CONST"),
+        )?;
+
+        let ident_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let name = ident_token.lexeme.clone();
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("SET"),
+        )?;
+
+        let value = self.parse_expr()?;
+
+        Ok(
+            AstConst {
+                name,
+                value,
+                line: ident_token.line,
+                column: ident_token.column,
+            }
+        )
+    }
+
+    pub fn parse_return(
+        &mut self,
+    ) -> Result<AstReturn, ParserError> {
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("RETURN"),
+        )?;
+
+        let value = self.parse_expr()?;
+
+        Ok(
+            AstReturn {
+                value,
+            }
+        )
+    }
+
+    pub fn parse_loop(
+        &mut self,
+    ) -> Result<AstLoop, ParserError> {
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("LOOP"),
+        )?;
+
+        self.expect_block_colon()?;
+
+        let body = self.parse_block()?;
+
+        Ok(
+            AstLoop {
+                body,
+            }
+        )
+    }
+
+    pub fn parse_if(
+        &mut self,
+    ) -> Result<AstIf, ParserError> {
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("IF"),
+        )?;
+
+        let condition = self.parse_expr()?;
+
+        self.expect_block_colon()?;
+
+        let then_branch = self.parse_block()?;
+
+        let mut else_branch = Vec::new();
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("ELSE"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("ELSE"),
+            )?;
+
+            self.expect_block_colon()?;
+
+            else_branch = self.parse_block()?;
+        }
+
+        Ok(
+            AstIf {
+                condition,
+                then_branch,
+                else_branch,
+            }
+        )
+    }
+
+    pub fn parse_try(
+        &mut self,
+    ) -> Result<AstTry, ParserError> {
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("TRY"),
+        )?;
+
+        self.eat(
+            Some(TokenKind::Colon),
+            None,
+        )?;
+
+        let try_body = self.parse_block()?;
+
+        let mut catch_body = Vec::new();
+        let mut finally_body = Vec::new();
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("CATCH"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("CATCH"),
+            )?;
+
+            self.eat(
+                Some(TokenKind::Colon),
+                None,
+            )?;
+
+            catch_body = self.parse_block()?;
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("FINALLY"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("FINALLY"),
+            )?;
+
+            self.eat(
+                Some(TokenKind::Colon),
+                None,
+            )?;
+
+            finally_body = self.parse_block()?;
+        }
+
+        Ok(
+            AstTry {
+                try_body,
+                catch_body,
+                finally_body,
+            }
+        )
+    }
+
 
     // Expressions
 
