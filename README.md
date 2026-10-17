@@ -1,5 +1,18 @@
 # nxd-rust-frontend
 
+Status: Active Migration
+
+This repository contains the ongoing Rust frontend rewrite of the NXD compiler.
+
+The Python frontend (in the nxd_language repository) remains the reference implementation during migration and parity testing.
+
+Current status:
+
+- Lexer complete
+- Parser migration in progress
+- Builds successfully
+- Tests passing
+
 Development repository for the NXD Rust frontend.
 
 This project reimplements the existing Python lexer, parser, and AST pipeline from the main NXD compiler in Rust.
