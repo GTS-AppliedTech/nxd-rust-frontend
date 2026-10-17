@@ -1424,9 +1424,222 @@ impl Parser {
     pub fn parse_expr(
         &mut self,
     ) -> Result<AstExpr, ParserError> {
+        self.parse_logic()
+    }
+
+    pub fn parse_logic(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
+        let mut left = self.parse_comp()?;
+
+        while self.at(
+            Some(TokenKind::Op),
+            None,
+        ) {
+            let Some(token) = self.current() else {
+                break;
+            };
+
+            if !matches!(
+                token.lexeme.as_str(),
+                "AND" | "OR"
+            ) {
+                break;
+            }
+
+            let op = self.eat(
+                Some(TokenKind::Op),
+                None,
+            )?.lexeme;
+
+            let right = self.parse_comp()?;
+
+            left = AstExpr::Binary(
+                Box::new(
+                    AstBinary {
+                        kind: op,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    }
+                )
+            );
+        }
+
+        Ok(left)
+    }
+
+    pub fn parse_comp(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
+        let mut left = self.parse_add()?;
+
+        while self.at(
+            Some(TokenKind::Op),
+            None,
+        ) {
+            let op_name = match self.current() {
+                Some(token) => token.lexeme.clone(),
+                None => break,
+            };
+
+            if !matches!(
+                op_name.as_str(),
+                "EQ"
+                    | "NEQ"
+                    | "GT"
+                    | "LT"
+                    | "GTE"
+                    | "LTE"
+                    | "AS"
+                    | "IS"
+            ) {
+                break;
+            }
+
+            let op = self.eat(
+                Some(TokenKind::Op),
+                None,
+            )?.lexeme;
+
+            let right = if op == "IS" || op == "AS" {
+                if self.at(
+                    Some(TokenKind::LowType),
+                    None,
+                ) {
+                    let type_token = self.eat(
+                        Some(TokenKind::LowType),
+                        None,
+                    )?;
+
+                    AstExpr::Var(
+                        AstVar {
+                            name: type_token.lexeme,
+                            line: type_token.line,
+                            column: type_token.column,
+                        }
+                    )
+                } else {
+                    let token = self.current().unwrap();
+
+                    return Err(
+                        ParserError::new(
+                            "NXD-P1012",
+                            format!(
+                                "NXD-P1012: Expected type after {}, got {:?} {}",
+                                op,
+                                token.kind,
+                                token.lexeme
+                            ),
+                            token.span(),
+                        )
+                    );
+                }
+            } else {
+                self.parse_add()?
+            };
+
+            left = AstExpr::Binary(
+                Box::new(
+                    AstBinary {
+                        kind: op,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    }
+                )
+            );
+        }
+
+        Ok(left)
+    }
+
+    pub fn parse_add(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
+        let mut left = self.parse_mul()?;
+
+        while self.at(
+            Some(TokenKind::Op),
+            None,
+        ) {
+            let Some(token) = self.current() else {
+                break;
+            };
+
+            if !matches!(
+                token.lexeme.as_str(),
+                "ADD" | "SUB"
+            ) {
+                break;
+            }
+
+            let op = self.eat(
+                Some(TokenKind::Op),
+                None,
+            )?.lexeme;
+
+            let right = self.parse_mul()?;
+
+            left = AstExpr::Binary(
+                Box::new(
+                    AstBinary {
+                        kind: op,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    }
+                )
+            );
+        }
+
+        Ok(left)
+    }
+
+    pub fn parse_mul(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
+        let mut left = self.parse_unary()?;
+
+        while self.at(
+            Some(TokenKind::Op),
+            None,
+        ) {
+            let Some(token) = self.current() else {
+                break;
+            };
+
+            if !matches!(
+                token.lexeme.as_str(),
+                "MUL" | "DIV" | "MOD"
+            ) {
+                break;
+            }
+
+            let op = self.eat(
+                Some(TokenKind::Op),
+                None,
+            )?.lexeme;
+
+            let right = self.parse_unary()?;
+
+            left = AstExpr::Binary(
+                Box::new(
+                    AstBinary {
+                        kind: op,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    }
+                )
+            );
+        }
+
+        Ok(left)
+    }
+
+    pub fn parse_unary(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
         todo!()
     }
-   
+    
     pub fn parse_literal(
         &mut self,
     ) -> Result<AstLiteral, ParserError> {
@@ -1573,9 +1786,12 @@ impl Parser {
     pub fn parse_map_literal(
         &mut self,
     ) -> Result<AstLiteral, ParserError> {
-        self.eat(Some(TokenKind::LBrace), None)?;
+        self.eat(
+            Some(TokenKind::LBrace),
+            None,
+        )?;
 
-        let mut entries = HashMap::new();
+        let mut entries: HashMap<String, AstExpr> = HashMap::new();
 
         while !self.at(
             Some(TokenKind::RBrace),
@@ -1589,20 +1805,91 @@ impl Parser {
                     Some(TokenKind::Newline),
                     None,
                 )?;
-
-                if self.at(
-                    Some(TokenKind::RBrace),
-                    None,
-                ) {
-                    break;
-                }
             }
 
-            // key parsing...
+            // Stop if blank lines brought us to the closing brace.
+            if self.at(
+                Some(TokenKind::RBrace),
+                None,
+            ) {
+                break;
+            }
 
-            // parse_expr()...
+            let key = if self.at(
+                Some(TokenKind::Ident),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Ident),
+                    None,
+                )?.lexeme
+            } else if self.at(
+                Some(TokenKind::LowName),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::LowName),
+                    None,
+                )?.lexeme
+            } else if self.at(
+                Some(TokenKind::String),
+                None,
+            ) {
+                let string_token = self.eat(
+                    Some(TokenKind::String),
+                    None,
+                )?;
 
-            // insert into hashmap...
+                string_token.lexeme[
+                    1..string_token.lexeme.len() - 1
+                ].to_string()
+            } else {
+                let token = self.current()
+                    .cloned()
+                    .expect("parse_map_literal called at EOF");
+
+                return Err(ParserError::new(
+                    "NXD-P1010",
+                    format!(
+                        "NXD-P1010: Expected map key, got {:?} {}",
+                        token.kind,
+                        token.lexeme,
+                    ),
+                    token.span(),
+                ));
+            };
+
+            self.eat(
+                Some(TokenKind::Colon),
+                None,
+            )?;
+
+            let value = self.parse_expr()?;
+
+            entries.insert(
+                key,
+                value,
+            );
+
+            if self.at(
+                Some(TokenKind::Comma),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Comma),
+                    None,
+                )?;
+            }
+
+            while self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+            }
         }
 
         self.eat(
@@ -1610,11 +1897,8 @@ impl Parser {
             None,
         )?;
 
-        Ok(
-            AstLiteral::Map(entries)
-        )
+        Ok(AstLiteral::Map(entries))
     }
-
 }
 
 pub fn parse(
