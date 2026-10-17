@@ -70,7 +70,7 @@ pub struct AstTrait {
 pub struct AstFunctionSignature {
     pub name: String,
     pub span: SourceSpan,
-    pub params: Vec<String>,
+    pub params: Vec<AstParam>,
     pub return_type: Option<String>, 
 }
 
@@ -85,6 +85,12 @@ pub struct AstImpl {
     pub methods: Vec<AstFunction>,
 }
 
+#[derive(Clone, Debug)]
+pub struct AstParam {
+    pub name: String,
+    pub ty: String,
+}
+
 // ==========================================
 // AST FUNCTIONS
 // ==========================================
@@ -93,7 +99,7 @@ pub struct AstImpl {
 pub struct AstFunction {
     pub name: String,
     pub span: SourceSpan,
-    pub params: Vec<String>,
+    pub params: Vec<AstParam>,
     pub return_type: Option<String>,
     pub body: Vec<AstStatement>,
     pub is_async: bool,

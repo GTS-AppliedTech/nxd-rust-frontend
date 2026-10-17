@@ -59,7 +59,7 @@ impl WarningDiagnostic {
 pub struct Parser {
     pub tokens: Vec<Token>,
     pub pos: usize,
-    pub indent_stack: Vec<usize>,
+    pub indent_stack: Vec<u32>,
     pub errors: Vec<ParserError>,
     pub warnings: Vec<WarningDiagnostic>,
     pub recover_errors: bool,
@@ -89,6 +89,20 @@ impl Parser {
 
     pub fn current(&self) -> Option<&Token> {
         self.tokens.get(self.pos)
+    }
+
+    pub fn current_column(
+        &self,
+    ) -> Option<u32> {
+        self.current().map(|token| token.column)
+    }
+
+    pub fn previous(
+        &self,
+    ) -> Option<&Token> {
+        self.pos
+            .checked_sub(1)
+            .and_then(|position| self.tokens.get(position))
     }
 
     pub fn peek(&self, offset: usize) -> Option<&Token> {
@@ -342,7 +356,9 @@ impl Parser {
             return self.parse_func_decl(is_async);
         }
 
-        self.parse_statement()
+        let statement = self.parse_statement()?;
+
+        Ok(AstNode::Statement(statement))
     }
 
     // Declarations
@@ -417,20 +433,507 @@ impl Parser {
     pub fn parse_trait_decl(
         &mut self,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("TRAIT"),
+        )?;
+
+        let name_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let name = name_token.lexeme;
+
+        self.parse_trait_type(name)
     }
 
     pub fn parse_impl_decl(
         &mut self,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+        let impl_column = self.current()
+            .map(|token| token.column)
+            .unwrap_or(0);
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("IMPL"),
+        )?;
+
+        let trait_name_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let trait_name = trait_name_token.lexeme;
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("FOR"),
+        )?;
+
+        let target_type_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let target_type = target_type_token.lexeme;
+
+        self.eat(
+            Some(TokenKind::Colon),
+            None,
+        )?;
+
+        while self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+
+        let mut methods: Vec<AstFunction> = Vec::new();
+
+        while self.at(
+            Some(TokenKind::Keyword),
+            Some("FUNC"),
+        ) && self.current_column()
+            .is_some_and(|column| column > impl_column)
+        {
+            let method_column = self.current_column()
+                .unwrap_or(impl_column);
+
+            let func_token = self.eat(
+                Some(TokenKind::Keyword),
+                Some("FUNC"),
+            )?;
+
+            let method_name_token = self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?;
+
+            let method_name = method_name_token.lexeme;
+
+            self.eat(
+                Some(TokenKind::LParen),
+                None,
+            )?;
+
+            let mut params: Vec<AstParam> = Vec::new();
+
+            if !self.at(
+                Some(TokenKind::RParen),
+                None,
+            ) {
+                let parameter_token = self.eat(
+                    Some(TokenKind::Ident),
+                    None,
+                )?;
+
+                params.push(
+                    AstParam {
+                        name: parameter_token.lexeme,
+                        ty: "any".to_string(),
+                    }
+                );
+
+                while self.at(
+                    Some(TokenKind::Comma),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::Comma),
+                        None,
+                    )?;
+
+                    let parameter_token = self.eat(
+                        Some(TokenKind::Ident),
+                        None,
+                    )?;
+
+                    params.push(
+                        AstParam { 
+                            name: parameter_token.lexeme,
+                            ty: "any".to_string(),
+                        }
+                    );
+                }
+            }
+
+            let rparen_token = self.eat(
+                Some(TokenKind::RParen),
+                None,
+            )?;
+
+            let mut return_type: Option<String> = None;
+            let mut method_end_span = rparen_token.span();
+
+            if self.at(
+                Some(TokenKind::Colon),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Colon),
+                    None,
+                )?;
+
+                if !self.at(
+                    Some(TokenKind::Newline),
+                    None,
+                ) {
+                    let return_type_token = if self.at(
+                        Some(TokenKind::LowType),
+                        None,
+                    ) {
+                        self.eat(
+                            Some(TokenKind::LowType),
+                            None,
+                        )?
+                    } else {
+                        self.eat(
+                            Some(TokenKind::Ident),
+                            None,
+                        )?
+                    };
+
+                    method_end_span = return_type_token.span();
+                    return_type = Some(return_type_token.lexeme);
+                }
+            }
+
+            if self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Newline),
+                    None,
+                )?;
+            }
+
+            let mut body: Vec<AstStatement> = Vec::new();
+
+            while !self.at(
+                Some(TokenKind::Eof),
+                None,
+            ) {
+                while self.at(
+                    Some(TokenKind::Newline),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::Newline),
+                        None,
+                    )?;
+                }
+
+                if self.at(
+                    Some(TokenKind::Eof),
+                    None,
+                ) {
+                    break;
+                }
+
+                match self.current_column() {
+                    Some(column) if column <= method_column => break,
+                    None => break,
+                    _ => {}
+                }
+
+                let statement = self.parse_statement()?;
+                body.push(statement);
+
+                if let Some(previous_token) = self.previous() {
+                    method_end_span = previous_token.span();
+                }
+            }
+
+            methods.push(AstFunction {
+                name: method_name,
+                span: SourceSpan {
+                    line: func_token.line,
+                    column: func_token.column,
+                    end_line: method_end_span.end_line,
+                    end_column: method_end_span.end_column,
+                },
+                params,
+                return_type,
+                body,
+                is_async: false,
+            });
+        }
+
+        Ok(AstNode::Impl(AstImpl {
+            trait_name,
+            target_type,
+            methods,
+        }))
     }
 
     pub fn parse_func_decl(
         &mut self,
         is_async: bool,
     ) -> Result<AstNode, ParserError> {
-        todo!()
+        let func_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("FUNC"),
+        )?;
+
+        let name_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let name = name_token.lexeme;
+
+        self.eat(
+            Some(TokenKind::LParen),
+            None,
+        )?;
+
+        let mut parsed_params: Vec<(String, String)> = Vec::new();
+
+        if !self.at(
+            Some(TokenKind::RParen),
+            None,
+        ) {
+            parsed_params.push(
+                self.parse_param()?,
+            );
+
+            while self.at(
+                Some(TokenKind::Comma),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Comma),
+                    None,
+                )?;
+
+                parsed_params.push(
+                    self.parse_param()?,
+                );
+            }
+        }
+
+        let rparen_token = self.eat(
+            Some(TokenKind::RParen),
+            None,
+        )?;
+
+        let mut return_type: Option<String> = None;
+        let mut function_end_span = rparen_token.span();
+
+        if self.at(
+            Some(TokenKind::Colon),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Colon),
+                None,
+            )?;
+
+            // This colon may introduce a return type or begin the block.
+            if !self.at(
+                Some(TokenKind::Newline),
+                None,
+            ) {
+                let return_type_token = if self.at(
+                    Some(TokenKind::LowType),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::LowType),
+                        None,
+                    )?
+                } else {
+                    self.eat(
+                        Some(TokenKind::Ident),
+                        None,
+                    )?
+                };
+
+                function_end_span = return_type_token.span();
+                return_type = Some(return_type_token.lexeme);
+            }
+        }
+
+        self.expect_block_colon()?;
+
+        let body = self.parse_block()?;
+
+        if let Some(previous_token) = self.previous() {
+            function_end_span = previous_token.span();
+        }
+
+        let params: Vec<AstParam> = parsed_params
+            .into_iter()
+            .map(|(parameter_name, parameter_type)| AstParam {
+                name: parameter_name,
+                ty: parameter_type,
+            })
+            .collect();
+
+        Ok(AstNode::Function(AstFunction {
+            name,
+            span: SourceSpan {
+                line: func_token.line,
+                column: func_token.column,
+                end_line: function_end_span.end_line,
+                end_column: function_end_span.end_column,
+            },
+            params,
+            return_type,
+            body,
+            is_async,
+        }))
+    }
+
+    pub fn parse_param(
+        &mut self,
+    ) -> Result<(String, String), ParserError> {
+        let name_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let name = name_token.lexeme;
+
+        if self.at(
+            Some(TokenKind::Colon),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Colon),
+                None,
+            )?;
+
+            let ty = self.parse_type_ref()?;
+
+            return Ok((name, ty));
+        }
+
+        Ok((name, "any".to_string()))
+    }
+
+    pub fn expect_block_colon(
+        &mut self,
+    ) -> Result<(), ParserError> {
+        if self.at(
+            Some(TokenKind::Colon),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Colon),
+                None,
+            )?;
+        }
+
+        if self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    pub fn parse_block(
+        &mut self,
+    ) -> Result<Vec<AstStatement>, ParserError> {
+        let mut statements: Vec<AstStatement> = Vec::new();
+
+        // Ignore blank lines before the block's first statement.
+        while self.at(
+            Some(TokenKind::Newline),
+            None,
+        ) {
+            self.eat(
+                Some(TokenKind::Newline),
+                None,
+            )?;
+        }
+
+        if self.at(
+            Some(TokenKind::Eof),
+            None,
+        ) {
+            return Ok(statements);
+        }
+
+        // The first statement defines this block's indentation.
+        let block_column = self.current_column()
+            .unwrap_or(0);
+
+        self.indent_stack.push(block_column);
+
+        // Use a closure so indent_stack is popped whether parsing
+        // succeeds or returns a ParserError.
+        let result = (|| -> Result<(), ParserError> {
+            while !self.at(
+                Some(TokenKind::Eof),
+                None,
+            ) {
+                if self.at(
+                    Some(TokenKind::Newline),
+                    None,
+                ) {
+                    self.eat(
+                        Some(TokenKind::Newline),
+                        None,
+                    )?;
+
+                    continue;
+                }
+
+                let current_column = self.current_column()
+                    .unwrap_or(0);
+
+                // Dedent closes the current block.
+                if current_column < block_column {
+                    break;
+                }
+
+                // The enclosing parser handles these tokens.
+                if self.at(
+                    Some(TokenKind::Keyword),
+                    Some("ELSE"),
+                ) || self.at(
+                    Some(TokenKind::Keyword),
+                    Some("CASE"),
+                ) || self.at(
+                    Some(TokenKind::Keyword),
+                    Some("OTHERWISE"),
+                ) || self.at(
+                    Some(TokenKind::Keyword),
+                    Some("CATCH"),
+                ) || self.at(
+                    Some(TokenKind::Keyword),
+                    Some("FINALLY"),
+                ) {
+                    break;
+                }
+
+                let statement = self.parse_statement()?;
+                statements.push(statement);
+            }
+
+            Ok(())
+        })();
+
+        self.indent_stack.pop();
+
+        result?;
+
+        Ok(statements)
     }
 
     pub fn parse_enum_type(
@@ -662,7 +1165,7 @@ impl Parser {
                 None,
             )?;
 
-            let mut params: Vec<String> = Vec::new();
+            let mut params: Vec<AstParam> = Vec::new();
 
             if !self.at(
                 Some(TokenKind::RParen),
@@ -673,7 +1176,12 @@ impl Parser {
                     None,
                 )?;
 
-                params.push(parameter_token.lexeme);
+                params.push(
+                    AstParam {
+                        name: parameter_token.lexeme,
+                        ty: "any".to_string(),
+                    }
+                );
 
                 while self.at(
                     Some(TokenKind::Comma),
@@ -689,7 +1197,12 @@ impl Parser {
                         None,
                     )?;
 
-                    params.push(parameter_token.lexeme);
+                    params.push(
+                        AstParam {
+                            name: parameter_token.lexeme,
+                            ty: "any".to_string(),
+                        }
+                    );
                 }
             }
 
@@ -871,7 +1384,7 @@ impl Parser {
 
     pub fn parse_statement(
         &mut self,
-    ) -> Result<AstNode, ParserError> {
+    ) -> Result<AstStatement, ParserError> {
         todo!()
     }
 
