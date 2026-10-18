@@ -1401,15 +1401,141 @@ impl Parser {
 
     // Statements
 
-
-    pub fn parse_match() {
-        todo!()
-    }
-
     pub fn parse_statement(
         &mut self,
     ) -> Result<AstStatement, ParserError> {
-        todo!()
+
+        let token = self.current()
+            .cloned()
+            .unwrap();
+
+        if token.kind == TokenKind::Keyword {
+            match token.lexeme.as_str() {
+                "LET" => {
+                    return Ok(
+                        AstStatement::Let(
+                            self.parse_let()?
+                        )
+                    );
+                }
+
+                "CONST" => {
+                    return Ok(
+                        AstStatement::Const(
+                            self.parse_const()?
+                        )
+                    );
+                }
+
+                "RETURN" => {
+                    return Ok(
+                        AstStatement::Return(
+                            self.parse_return()?
+                        )
+                    );
+                }
+
+                "TRY" => {
+                    return Ok(
+                        AstStatement::Try(
+                            self.parse_try()?
+                        )
+                    );
+                }
+
+                "LOOP" => {
+                    return Ok(
+                        AstStatement::Loop(
+                            self.parse_loop()?
+                        )
+                    );
+                }
+
+                "IF" => {
+                    return Ok(
+                        AstStatement::If(
+                            self.parse_if()?
+                        )
+                    );
+                }
+
+                "MATCH" => {
+                    return Ok(
+                        AstStatement::Match(
+                            self.parse_match()?
+                        )
+                    );
+                }
+
+                "SPAWN" => {
+                    return Ok(
+                        AstStatement::Expr(
+                            AstExpr::Call(
+                                self.parse_spawn()?
+                            )
+                        )
+                    );
+                }
+
+                "SEND" => {
+                    return Ok(
+                        AstStatement::Expr(
+                            AstExpr::Call(
+                                self.parse_send()?
+                            )
+                        )
+                    );
+                }
+
+                "RECV" => {
+                    return Ok(
+                        AstStatement::Expr(
+                            AstExpr::Call(
+                                self.parse_recv()?
+                            )
+                        )
+                    );
+                }
+
+                "AWAIT" => {
+                    return Ok(
+                        AstStatement::Expr(
+                            AstExpr::Call(
+                                self.parse_await_stmt()?
+                            )
+                        )
+                    );
+                }
+
+                _ => {}
+            }
+        }
+
+        if token.kind == TokenKind::Op
+            && token.lexeme == "MOVE"
+        {
+            return Ok(
+                AstStatement::Move(
+                    self.parse_move()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Op
+            && token.lexeme == "CLONE"
+        {
+            return Ok(
+                AstStatement::Clone(
+                    self.parse_clone()?
+                )
+            );
+        }
+
+        let expr = self.parse_expr()?;
+
+        Ok(
+            AstStatement::Expr(expr)
+        )
     }
 
     pub fn parse_clone(
@@ -1540,6 +1666,58 @@ impl Parser {
 
         Ok(
             AstClone {
+                source,
+                target,
+            }
+        )
+    }
+
+    pub fn parse_move(
+        &mut self,
+    ) -> Result<AstMove, ParserError> {
+
+        self.eat(
+            Some(TokenKind::Op),
+            Some("MOVE"),
+        )?;
+
+        let source = self.parse_primary()?;
+
+        if !(
+            self.at(
+                Some(TokenKind::Ident),
+                None,
+            )
+            &&
+            self.current()
+                .map(|token| token.lexeme.as_str())
+                == Some("TO")
+        ) {
+            let token = self.current()
+                .cloned()
+                .unwrap();
+
+            return Err(
+                ParserError::new(
+                    "NXD-P1011",
+                    format!(
+                        "NXD-P1011: Expected TO after Move source, got \"{}\"",
+                        token.lexeme
+                    ),
+                    token.span(),
+                )
+            );
+        }
+
+        self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let target = self.parse_primary()?;
+
+        Ok(
+            AstMove {
                 source,
                 target,
             }
@@ -1685,6 +1863,57 @@ impl Parser {
         )
     }
 
+    pub fn parse_match(
+        &mut self,
+    ) -> Result<AstMatch, ParserError> {
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("MATCH"),
+        )?;
+
+        let scrutinee = self.parse_expr()?;
+
+        self.expect_block_colon()?;
+
+        let mut arms = Vec::new();
+
+        let mut otherwise = None;
+
+        while self.at(
+            Some(TokenKind::Keyword),
+            Some("CASE"),
+        ) {
+            arms.push(
+                self.parse_case_block()?
+            );
+        }
+
+        if self.at(
+            Some(TokenKind::Keyword),
+            Some("OTHERWISE"),
+        ) {
+            self.eat(
+                Some(TokenKind::Keyword),
+                Some("OTHERWISE"),
+            )?;
+
+            self.expect_block_colon()?;
+
+            otherwise = Some(
+                self.parse_block()?
+            );
+        }
+
+        Ok(
+            AstMatch {
+                scrutinee,
+                arms,
+                otherwise,
+            }
+        )
+    }
+
     pub fn parse_try(
         &mut self,
     ) -> Result<AstTry, ParserError> {
@@ -1746,10 +1975,62 @@ impl Parser {
         )
     }
 
+    pub fn parse_case_block(
+        &mut self,
+    ) -> Result<AstMatchArm, ParserError> {
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("CASE"),
+        )?;
+
+        let pattern = self.parse_pattern()?;
+
+        self.expect_block_colon()?;
+
+        let body = self.parse_block()?;
+
+        Ok(
+            AstMatchArm {
+                pattern,
+                body,
+            }
+        )
+    }
+
+    pub fn parse_pattern(
+        &mut self,
+    ) -> Result<String, ParserError> {
+
+        let token = self.current()
+            .cloned()
+            .unwrap();
+
+        if matches!(
+            token.kind,
+            TokenKind::Number | TokenKind::String
+        ) {
+            return Ok(token.lexeme);
+        }
+
+        Ok(
+            self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?.lexeme
+        )
+    }
+
     pub fn parse_spawn(
         &mut self,
     ) -> Result<AstCall, ParserError> {
-        todo!()
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("SPAWN"),
+        )?;
+
+        self.parse_call_expr()
     }
 
     pub fn parse_send(
@@ -2176,7 +2457,40 @@ impl Parser {
     pub fn parse_unary(
         &mut self,
     ) -> Result<AstExpr, ParserError> {
-        todo!()
+
+        if self.at(
+            Some(TokenKind::Op),
+            None,
+        ) {
+            if let Some(token) = self.current() {
+
+                if matches!(
+                    token.lexeme.as_str(),
+                    "NOT" | "BORROW" | "SUB"
+                ) {
+
+                    let op = self.eat(
+                        Some(TokenKind::Op),
+                        None,
+                    )?.lexeme;
+
+                    let expr = self.parse_primary()?;
+
+                    return Ok(
+                        AstExpr::Unary(
+                            Box::new(
+                                AstUnary {
+                                    kind: op,
+                                    expr: Box::new(expr),
+                                }
+                            )
+                        )
+                    );
+                }
+            }
+        }
+
+        self.parse_primary()
     }
 
     pub fn parse_primary(
