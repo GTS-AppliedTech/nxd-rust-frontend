@@ -1746,8 +1746,219 @@ impl Parser {
         )
     }
 
+    pub fn parse_spawn(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        todo!()
+    }
+
+    pub fn parse_send(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let send_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("SEND"),
+        )?;
+
+        let msg = self.parse_expr()?;
+
+        self.eat(
+            Some(TokenKind::Keyword),
+            Some("TO"),
+        )?;
+
+        let target = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "SEND".to_string(),
+                args: vec![
+                    msg,
+                    target,
+                ],
+                line: send_token.line,
+                column: send_token.column,
+            }
+        )
+    }
+
+    pub fn parse_recv(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let recv_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("RECV"),
+        )?;
+
+        let ident_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        Ok(
+            AstCall {
+                func: "RECV".to_string(),
+                args: vec![
+                    AstExpr::Var(
+                        AstVar {
+                            name: ident_token.lexeme,
+                            line: ident_token.line,
+                            column: ident_token.column,
+                        }
+                    )
+                ],
+                line: recv_token.line,
+                column: recv_token.column,
+            }
+        )
+    }
+
+    pub fn parse_await_stmt(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let await_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("AWAIT"),
+        )?;
+
+        let expr = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "AWAIT".to_string(),
+                args: vec![expr],
+                line: await_token.line,
+                column: await_token.column,
+            }
+        )
+    }
+
 
     // Expressions
+
+    pub fn parse_await_expr(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let await_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("AWAIT"),
+        )?;
+
+        let expr = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "AWAIT".to_string(),
+                args: vec![expr],
+                line: await_token.line,
+                column: await_token.column,
+            }
+        )
+    }
+
+    pub fn parse_spawn_expr(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let spawn_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("SPAWN"),
+        )?;
+
+        let target = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "SPAWN".to_string(),
+                args: vec![target],
+                line: spawn_token.line,
+                column: spawn_token.column,
+            }
+        )
+    }
+
+    pub fn parse_recv_expr(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let recv_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("RECV"),
+        )?;
+
+        let source = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "RECV".to_string(),
+                args: vec![source],
+                line: recv_token.line,
+                column: recv_token.column,
+            }
+        )
+    }
+
+    pub fn parse_ping_expr(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let ping_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("PING"),
+        )?;
+
+        let target = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "PING".to_string(),
+                args: vec![target],
+                line: ping_token.line,
+                column: ping_token.column,
+            }
+        )
+    }
+
+    pub fn parse_esc_expr(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let esc_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("ESC"),
+        )?;
+
+        let target = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "ESC".to_string(),
+                args: vec![target],
+                line: esc_token.line,
+                column: esc_token.column,
+            }
+        )
+    }
+
+    pub fn parse_timeout_expr(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+        let timeout_token = self.eat(
+            Some(TokenKind::Keyword),
+            Some("TIMEOUT"),
+        )?;
+
+        let target = self.parse_expr()?;
+        let duration = self.parse_expr()?;
+
+        Ok(
+            AstCall {
+                func: "TIMEOUT".to_string(),
+                args: vec![
+                    target,
+                    duration,
+                ],
+                line: timeout_token.line,
+                column: timeout_token.column,
+            }
+        )
+    }
 
     pub fn parse_expr(
         &mut self,
@@ -1966,6 +2177,162 @@ impl Parser {
         &mut self,
     ) -> Result<AstExpr, ParserError> {
         todo!()
+    }
+
+    pub fn parse_primary(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
+        let token = self.current()
+            .cloned()
+            .unwrap();
+
+        if matches!(
+            token.kind,
+            TokenKind::Number | TokenKind::String
+        ) {
+            return Ok(
+                AstExpr::Literal(
+                    self.parse_literal()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::LowName
+            && matches!(
+                token.lexeme.as_str(),
+                "true" | "false" | "none"
+            )
+        {
+            return Ok(
+                AstExpr::Literal(
+                    self.parse_literal()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::LBrack {
+            return Ok(
+                AstExpr::Literal(
+                    self.parse_list_literal()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::LBrace {
+            return Ok(
+                AstExpr::Literal(
+                    self.parse_map_literal()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Fn {
+            return self.parse_lambda();
+        }
+
+        if token.kind == TokenKind::Keyword
+            && token.lexeme == "AWAIT"
+        {
+            return Ok(
+                AstExpr::Call(
+                    self.parse_await_expr()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Keyword
+            && token.lexeme == "SPAWN"
+        {
+            return Ok(
+                AstExpr::Call(
+                    self.parse_spawn_expr()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Keyword
+            && token.lexeme == "RECV"
+        {
+            return Ok(
+                AstExpr::Call(
+                    self.parse_recv_expr()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Keyword
+            && token.lexeme == "PING"
+        {
+            return Ok(
+                AstExpr::Call(
+                    self.parse_ping_expr()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Keyword
+            && token.lexeme == "ESC"
+        {
+            return Ok(
+                AstExpr::Call(
+                    self.parse_esc_expr()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Keyword
+            && token.lexeme == "TIMEOUT"
+        {
+            return Ok(
+                AstExpr::Call(
+                    self.parse_timeout_expr()?
+                )
+            );
+        }
+
+        if token.kind == TokenKind::Ident {
+            if self.next_is(TokenKind::LParen) {
+                return Ok(
+                    AstExpr::Call(
+                        self.parse_call_expr()?
+                    )
+                );
+            }
+
+            if self.next_is(TokenKind::LBrace) {
+                return Ok(
+                    AstExpr::ObjectInit(
+                        self.parse_object_init()?
+                    )
+                );
+            }
+
+            let ident_token = self.eat(
+                Some(TokenKind::Ident),
+                None,
+            )?;
+
+            return Ok(
+                AstExpr::Var(
+                    AstVar {
+                        name: ident_token.lexeme,
+                        line: ident_token.line,
+                        column: ident_token.column,
+                    }
+                )
+            );
+        }
+
+        Err(
+            ParserError::new(
+                "NXD-P1008",
+                format!(
+                    "NXD-P1008: Unexpected token in primary: {}",
+                    token.lexeme
+                ),
+                token.span(),
+            )
+        )
     }
     
     pub fn parse_literal(
@@ -2226,6 +2593,131 @@ impl Parser {
         )?;
 
         Ok(AstLiteral::Map(entries))
+    }
+
+    pub fn parse_lambda(
+        &mut self,
+    ) -> Result<AstExpr, ParserError> {
+
+        self.eat(
+            Some(TokenKind::Fn),
+            None,
+        )?;
+
+        self.eat(
+            Some(TokenKind::LParen),
+            None,
+        )?;
+
+        let mut params = Vec::new();
+
+        if !self.at(
+            Some(TokenKind::RParen),
+            None,
+        ) {
+
+            params.push(
+                self.eat(
+                    Some(TokenKind::Ident),
+                    None,
+                )?.lexeme
+            );
+
+            while self.at(
+                Some(TokenKind::Comma),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Comma),
+                    None,
+                )?;
+
+                params.push(
+                    self.eat(
+                        Some(TokenKind::Ident),
+                        None,
+                    )?.lexeme
+                );
+            }
+        }
+
+        self.eat(
+            Some(TokenKind::RParen),
+            None,
+        )?;
+
+        self.eat(
+            Some(TokenKind::Arrow),
+            None,
+        )?;
+
+        let body = self.parse_expr()?;
+
+        Ok(
+            AstExpr::Literal(
+                AstLiteral::Lambda {
+                    params,
+                    body: Box::new(body),
+                }
+            )
+        )
+    }
+
+
+    pub fn parse_call_expr(
+        &mut self,
+    ) -> Result<AstCall, ParserError> {
+
+        let ident_token = self.eat(
+            Some(TokenKind::Ident),
+            None,
+        )?;
+
+        let name = ident_token.lexeme.clone();
+
+        self.eat(
+            Some(TokenKind::LParen),
+            None,
+        )?;
+
+        let mut args = Vec::new();
+
+        if !self.at(
+            Some(TokenKind::RParen),
+            None,
+        ) {
+            args.push(
+                self.parse_expr()?
+            );
+
+            while self.at(
+                Some(TokenKind::Comma),
+                None,
+            ) {
+                self.eat(
+                    Some(TokenKind::Comma),
+                    None,
+                )?;
+
+                args.push(
+                    self.parse_expr()?
+                );
+            }
+        }
+
+        self.eat(
+            Some(TokenKind::RParen),
+            None,
+        )?;
+
+        Ok(
+            AstCall {
+                func: name,
+                args,
+                line: ident_token.line,
+                column: ident_token.column,
+            }
+        )
     }
 }
 

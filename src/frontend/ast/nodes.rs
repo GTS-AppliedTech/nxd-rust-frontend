@@ -201,6 +201,10 @@ pub enum AstLiteral {
     None,
     List(Vec<AstExpr>),
     Map(HashMap<String, AstExpr>),
+    Lambda {
+        params: Vec<String>,
+        body: Box<AstExpr>,
+    }
 }
 
 #[derive(Clone, Debug)]
