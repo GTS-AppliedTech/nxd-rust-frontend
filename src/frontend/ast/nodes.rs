@@ -113,12 +113,16 @@ pub struct AstFunction {
 pub struct AstMove {
     pub source: AstExpr,
     pub target: AstExpr,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Clone, Debug)]
 pub struct AstClone {
     pub source: AstExpr,
     pub target: AstExpr,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -140,11 +144,15 @@ pub struct AstConst {
 #[derive(Clone, Debug)]
 pub struct AstReturn {
     pub value: AstExpr,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Clone, Debug)]
 pub struct AstLoop {
     pub body: Vec<AstStatement>,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -152,6 +160,8 @@ pub struct AstIf {
     pub condition: AstExpr,
     pub then_branch: Vec<AstStatement>,
     pub else_branch: Vec<AstStatement>,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -159,6 +169,8 @@ pub struct AstTry {
     pub try_body: Vec<AstStatement>,
     pub catch_body: Vec<AstStatement>,
     pub finally_body: Vec<AstStatement>,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -166,6 +178,8 @@ pub struct AstMatch {
     pub scrutinee: AstExpr,
     pub arms: Vec<AstMatchArm>,
     pub otherwise: Option<Vec<AstStatement>>,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -186,6 +200,84 @@ pub enum AstStatement {
     Try(AstTry),
     Match(AstMatch),
     Expr(AstExpr),
+}
+
+impl AstStatement {
+    pub fn span(&self) -> SourceSpan {
+        match self {
+            AstStatement::Let(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::Const(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::Return(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::Move(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::Clone(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::Loop(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::If(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::Try(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
+            },
+
+            AstStatement::Match(stmt) => {
+                SourceSpan {
+                    line: stmt.line,
+                    column: stmt.column,
+                    end_line: stmt.line,
+                    end_column: stmt.column + 1,
+                }
+            },
+
+            AstStatement::Expr(_) => SourceSpan {
+                line: 0,
+                column: 0,
+                end_line: 0,
+                end_column: 1,
+            },
+        }
+    }
 }
 
 // ===================================

@@ -1560,7 +1560,7 @@ impl Parser {
             );
         }
 
-        self.eat(
+        let clone_token = self.eat(
             Some(TokenKind::Op),
             Some("CLONE"),
         )?;
@@ -1668,6 +1668,8 @@ impl Parser {
             AstClone {
                 source,
                 target,
+                line: clone_token.line,
+                column: clone_token.column,
             }
         )
     }
@@ -1676,7 +1678,7 @@ impl Parser {
         &mut self,
     ) -> Result<AstMove, ParserError> {
 
-        self.eat(
+        let move_token = self.eat(
             Some(TokenKind::Op),
             Some("MOVE"),
         )?;
@@ -1720,6 +1722,8 @@ impl Parser {
             AstMove {
                 source,
                 target,
+                line: move_token.line,
+                column: move_token.column,
             }
         )
     }
@@ -1791,7 +1795,7 @@ impl Parser {
     pub fn parse_return(
         &mut self,
     ) -> Result<AstReturn, ParserError> {
-        self.eat(
+        let return_token = self.eat(
             Some(TokenKind::Keyword),
             Some("RETURN"),
         )?;
@@ -1801,6 +1805,9 @@ impl Parser {
         Ok(
             AstReturn {
                 value,
+                line: return_token.line,
+                column: return_token.column,
+
             }
         )
     }
@@ -1808,7 +1815,7 @@ impl Parser {
     pub fn parse_loop(
         &mut self,
     ) -> Result<AstLoop, ParserError> {
-        self.eat(
+        let loop_token = self.eat(
             Some(TokenKind::Keyword),
             Some("LOOP"),
         )?;
@@ -1820,6 +1827,8 @@ impl Parser {
         Ok(
             AstLoop {
                 body,
+                line: loop_token.line,
+                column: loop_token.column,
             }
         )
     }
@@ -1827,7 +1836,7 @@ impl Parser {
     pub fn parse_if(
         &mut self,
     ) -> Result<AstIf, ParserError> {
-        self.eat(
+        let if_token = self.eat(
             Some(TokenKind::Keyword),
             Some("IF"),
         )?;
@@ -1859,6 +1868,8 @@ impl Parser {
                 condition,
                 then_branch,
                 else_branch,
+                line: if_token.line,
+                column: if_token.column,
             }
         )
     }
@@ -1867,7 +1878,7 @@ impl Parser {
         &mut self,
     ) -> Result<AstMatch, ParserError> {
 
-        self.eat(
+        let match_token = self.eat(
             Some(TokenKind::Keyword),
             Some("MATCH"),
         )?;
@@ -1910,6 +1921,8 @@ impl Parser {
                 scrutinee,
                 arms,
                 otherwise,
+                line: match_token.line,
+                column: match_token.column,
             }
         )
     }
@@ -1917,7 +1930,7 @@ impl Parser {
     pub fn parse_try(
         &mut self,
     ) -> Result<AstTry, ParserError> {
-        self.eat(
+        let try_token = self.eat(
             Some(TokenKind::Keyword),
             Some("TRY"),
         )?;
@@ -1971,6 +1984,8 @@ impl Parser {
                 try_body,
                 catch_body,
                 finally_body,
+                line: try_token.line,
+                column: try_token.column,
             }
         )
     }
