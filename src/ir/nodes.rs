@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt;
 // ===============================
@@ -163,7 +162,7 @@ pub struct IRMatch {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct IRMatchArm {
-    pub pattern: Value,
+    pub pattern: String,
     pub body: Vec<IRStatement>,
 }
 
@@ -228,20 +227,50 @@ pub enum IRLiteral {
     String(String),
     Bool(bool),
     None,
-    List(Vec<IRLiteral>),
+    List(Vec<IRExpr>),
+    Map(HashMap<String, IRExpr>),
+    Lambda {
+        params: Vec<String>,
+        body: Box<IRExpr>,
+    },
 }
 impl fmt::Display for IRLiteral {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             IRLiteral::Int(v) => write!(f, "{}", v),
+
             IRLiteral::Float(v) => write!(f, "{}", v),
+
             IRLiteral::String(v) => write!(f, "\"{}\"", v),
+
             IRLiteral::Bool(v) => write!(f, "{}", v),
+
             IRLiteral::None => write!(f, "nil"),
+
             IRLiteral::List(items) => {
-                let rendered: Vec<String> = items.iter().map(|item| item.to_string()).collect();
+                let rendered = items
+                    .iter()
+                    .map(|item| item.to_string())
+                    .collect::<Vec<_>>();
 
                 write!(f, "[{}]", rendered.join(", "))
+            }
+
+            IRLiteral::Map(entries) => {
+                let mut fields = entries.iter().collect::<Vec<_>>();
+
+                fields.sort_by(|left, right| left.0.cmp(right.0));
+
+                let rendered = fields
+                    .into_iter()
+                    .map(|(name, value)| format!("{}: {}", name, value))
+                    .collect::<Vec<_>>();
+
+                write!(f, "{{{}}}", rendered.join(", "))
+            }
+
+            IRLiteral::Lambda { params, body } => {
+                write!(f, "FN({}) -> {}", params.join(", "), body)
             }
         }
     }

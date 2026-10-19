@@ -737,6 +737,10 @@ impl Analyzer {
             IRLiteral::None => "none".to_string(),
 
             IRLiteral::List(_) => "list".to_string(),
+
+            IRLiteral::Map(_) => "map".to_string(),
+
+            IRLiteral::Lambda { .. } => "lambda".to_string(),
         }
     }
 }
