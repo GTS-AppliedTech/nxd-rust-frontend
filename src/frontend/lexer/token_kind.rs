@@ -46,67 +46,67 @@ pub const TOKEN_SPEC: &[TokenRule] = &[
         kind: TokenKind::Skip,
         pattern: r"[ \t]+",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::LBrace,
         pattern: r"\{",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::RBrace,
         pattern: r"\}",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::LBrack,
         pattern: r"\[",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::RBrack,
         pattern: r"\]",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::LParen,
         pattern: r"\(",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::RParen,
         pattern: r"\)",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Colon,
         pattern: r":",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Comma,
         pattern: r",",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Arrow,
         pattern: r"=>",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Keyword,
         pattern: r"MODULE|IMPORT|TYPE|ENUM|STRUCT|UNION|TRAIT|IMPL|FUNC|LET|CONST|RETURN|IF|ELSE|MATCH|CASE|OTHERWISE|LOOP|ASYNC|SPAWN|SEND|RECV|AWAIT|PING|ESC|TIMEOUT|TRY|CATCH|FINALLY|SET|FOR|TO",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Op,
         pattern: r"ADD|SUB|MUL|DIV|MOD|EQ|NEQ|GTE|LTE|GT|LT|AND|OR|NOT|AS|IS|PIPE|MOVE|CLONE|BORROW",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Ident,
         pattern: r"[A-Z][A-Z0-9_]*",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::LowType,
         pattern: r"int|float|string|bool",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Fn,
         pattern: r"fn",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::LowName,
         pattern: r"[a-z_][a-z0-9_]*",
     },
-        TokenRule {
+    TokenRule {
         kind: TokenKind::Mismatch,
         pattern: r".",
     },

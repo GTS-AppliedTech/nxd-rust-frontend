@@ -1,12 +1,9 @@
 use regex::Regex;
 
 use crate::frontend::lexer::token::Token;
-use crate::frontend::lexer::token_kind::{
-    TokenKind, TOKEN_SPEC,
-};
+use crate::frontend::lexer::token_kind::{TOKEN_SPEC, TokenKind};
 
 pub fn strip_line_comments(source: &str) -> String {
-
     // Removes NXD // line comments while preserving:
     // - newline characters
     // - // inside string literals
@@ -44,20 +41,14 @@ pub fn strip_line_comments(source: &str) -> String {
             continue;
         }
 
-        if ch == '/'
-            && index + 1 < chars.len()
-            && chars[index + 1] == '/'
-        {
+        if ch == '/' && index + 1 < chars.len() && chars[index + 1] == '/' {
             // Skip both slash characters.
 
             index += 2;
 
             // Skip comment contents, but do not consume the newline.
-            
-            while index < chars.len()
-                && chars[index] != '\r'
-                && chars[index] != '\n'
-            {
+
+            while index < chars.len() && chars[index] != '\r' && chars[index] != '\n' {
                 index += 1;
             }
 
@@ -88,13 +79,7 @@ pub fn lex(src: &str) -> Result<Vec<Token>, String> {
 
             Regex::new(&anchored_pattern)
                 .map(|regex| (rule.kind, regex))
-                .map_err(|error| {
-                    format!(
-                        "Invalid lexer regex {:?}: {}",
-                        rule.pattern,
-                        error
-                    )
-                })
+                .map_err(|error| format!("Invalid lexer regex {:?}: {}", rule.pattern, error))
         })
         .collect();
 
@@ -122,8 +107,7 @@ pub fn lex(src: &str) -> Result<Vec<Token>, String> {
         let Some((kind, value)) = matched_rule else {
             return Err(format!(
                 "Unable to tokenize source at line {}, column {}",
-                line,
-                column
+                line, column
             ));
         };
 
@@ -149,9 +133,7 @@ pub fn lex(src: &str) -> Result<Vec<Token>, String> {
             TokenKind::Mismatch => {
                 return Err(format!(
                     "Unexpected character {:?} at line {}, column {}",
-                    value,
-                    line,
-                    column
+                    value, line, column
                 ));
             }
 
@@ -181,7 +163,7 @@ pub fn lex(src: &str) -> Result<Vec<Token>, String> {
     });
 
     Ok(tokens)
-}   
+}
 
 #[cfg(test)]
 mod tests {
@@ -193,44 +175,32 @@ mod tests {
 
         let stripped = strip_line_comments(source);
 
-        assert_eq!(
-            stripped,
-            "LET VALUE \nRETURN VALUE"
-        );
+        assert_eq!(stripped, "LET VALUE \nRETURN VALUE");
     }
 
     #[test]
     fn preserves_comment_markers_inside_strings() {
-        let source =
-            r#"LET MESSAGE "https://example.com" // remove this"#;
+        let source = r#"LET MESSAGE "https://example.com" // remove this"#;
 
         let stripped = strip_line_comments(source);
 
-        assert_eq!(
-            stripped,
-            r#"LET MESSAGE "https://example.com" "#
-        );
+        assert_eq!(stripped, r#"LET MESSAGE "https://example.com" "#);
     }
 
     #[test]
     fn preserves_escaped_quotes_inside_strings() {
-        let source =
-            r#"LET MESSAGE "She said \"hello // world\"" // remove"#;
+        let source = r#"LET MESSAGE "She said \"hello // world\"" // remove"#;
 
         let stripped = strip_line_comments(source);
 
-        assert_eq!(
-            stripped,
-            r#"LET MESSAGE "She said \"hello // world\"" "#
-        );
+        assert_eq!(stripped, r#"LET MESSAGE "She said \"hello // world\"" "#);
     }
 
     #[test]
     fn lexes_basic_nxd_source() {
         let source = "LET VALUE 42\nRETURN VALUE";
 
-        let tokens = lex(source)
-            .expect("Lexer should accept valid NXD source");
+        let tokens = lex(source).expect("Lexer should accept valid NXD source");
 
         assert_eq!(tokens[0].kind, TokenKind::Keyword);
         assert_eq!(tokens[0].lexeme, "LET");
@@ -259,8 +229,7 @@ mod tests {
 
     #[test]
     fn rejects_invalid_characters() {
-        let error = lex("LET VALUE @")
-            .expect_err("Lexer should reject @");
+        let error = lex("LET VALUE @").expect_err("Lexer should reject @");
 
         assert!(error.contains("Unexpected character"));
         assert!(error.contains("line 1"));

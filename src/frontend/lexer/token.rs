@@ -1,5 +1,5 @@
-use crate::frontend::lexer::token_kind::TokenKind;
 use crate::frontend::ast::nodes::SourceSpan;
+use crate::frontend::lexer::token_kind::TokenKind;
 
 impl Token {
     pub fn span(&self) -> SourceSpan {

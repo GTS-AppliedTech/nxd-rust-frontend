@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
-pub struct SourceSpan{
+pub struct SourceSpan {
     pub line: u32,
     pub column: u32,
     pub end_line: u32,
@@ -71,7 +71,7 @@ pub struct AstFunctionSignature {
     pub name: String,
     pub span: SourceSpan,
     pub params: Vec<AstParam>,
-    pub return_type: Option<String>, 
+    pub return_type: Option<String>,
 }
 
 // =========================================
@@ -261,13 +261,11 @@ impl AstStatement {
                 end_column: stmt.column + 1,
             },
 
-            AstStatement::Match(stmt) => {
-                SourceSpan {
-                    line: stmt.line,
-                    column: stmt.column,
-                    end_line: stmt.line,
-                    end_column: stmt.column + 1,
-                }
+            AstStatement::Match(stmt) => SourceSpan {
+                line: stmt.line,
+                column: stmt.column,
+                end_line: stmt.line,
+                end_column: stmt.column + 1,
             },
 
             AstStatement::Expr(_) => SourceSpan {
@@ -296,7 +294,7 @@ pub enum AstLiteral {
     Lambda {
         params: Vec<String>,
         body: Box<AstExpr>,
-    }
+    },
 }
 
 #[derive(Clone, Debug)]
