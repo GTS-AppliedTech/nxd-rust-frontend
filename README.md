@@ -9,20 +9,22 @@ The Python frontend (in the nxd_language repository) remains the reference imple
 Current status:
 
 - Lexer complete
-- Parser migration in progress
+- Parser complete
+- AST complete
+- IR migration in progress
 - Builds successfully
 - Tests passing
 
 Development repository for the NXD Rust frontend.
 
-This project reimplements the existing Python lexer, parser, and AST pipeline from the main NXD compiler in Rust.
+This project reimplements the existing Python lexer, parser, IR, and AST pipeline from the main NXD compiler in Rust.
 
 The current Python frontend serves as the reference implementation while functionality is ported and validated through parity testing.
 
 ## Background
 
 NXD currently uses a Python frontend and a Rust compiler core connected through
-a JSON AST handoff. While this architecture enabled rapid language development,
+a JSON IR handoff. While this architecture enabled rapid language development,
 it also requires maintaining compiler structures across language boundaries and
 introduces additional serialization, debugging, and synchronization overhead.
 
@@ -34,7 +36,8 @@ preserving existing language semantics and compiler behavior.
 - Rust lexer
 - Rust parser
 - Rust AST
-- JSON AST compatibility
+- Rust IR
+- JSON IR compatibility
 - Feature parity with the Python frontend
 - Preservation of current compiler semantics and diagnostics
 
