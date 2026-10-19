@@ -1,0 +1,48 @@
+use crate::frontend::parser::parser::parse;
+use crate::frontend::warnings::find_unused_variables;
+use crate::ir::lowering::*;
+use crate::ir::nodes::*;
+
+use serde_json::to_string_pretty;
+
+pub fn compile_to_ir(src: &str) -> Result<IRRoot, Box<dyn std::error::Error>> {
+    let (ast_module, ast_types, ast_functions) = parse(src)?;
+
+    let warnings = find_unused_variables(&ast_module);
+
+    println!("\n=== AST MODULE ===");
+    println!("{:#?}", ast_module);
+
+    println!("\n=== AST TYPES ===");
+    println!("{:#?}", ast_types);
+
+    println!("\n=== AST FUNCTIONS ===");
+    println!("{:#?}", ast_functions);
+
+    println!("\n=== WARNINGS ===");
+    println!("{:#?}", warnings);
+
+    let ir_root = IRRoot {
+        module: lower_module(&ast_module),
+
+        types: lower_types(&ast_types),
+
+        traits: Vec::new(),
+
+        impls: Vec::new(),
+
+        functions: ast_functions.iter().map(lower_function).collect(),
+
+        statements: Vec::new(),
+    };
+
+    Ok(ir_root)
+}
+
+pub fn compile_to_ir_json(src: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let ir_root = compile_to_ir(src)?;
+
+    let json = to_string_pretty(&ir_root)?;
+
+    Ok(json)
+}

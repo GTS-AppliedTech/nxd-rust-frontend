@@ -37,6 +37,14 @@ impl ParserError {
     }
 }
 
+impl std::fmt::Display for ParserError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{}", self.message)
+    }
+}
+
+impl std::error::Error for ParserError {}
+
 impl WarningDiagnostic {
     pub fn new(code: impl Into<String>, message: impl Into<String>, span: SourceSpan) -> Self {
         Self {

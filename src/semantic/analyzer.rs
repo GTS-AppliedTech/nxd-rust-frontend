@@ -1,5 +1,4 @@
 use crate::ir::nodes::*;
-use crate::ir::parse_ir::IRRoot;
 use crate::semantic::{
     casts::{check_as_cast, check_is},
     errors::{AsyncViolation, SemanticError},
