@@ -10,14 +10,8 @@ pub fn compile_to_ir(src: &str) -> Result<IRRoot, Box<dyn std::error::Error>> {
 
     let warnings = find_unused_variables(&ast_module);
 
-    println!("\n=== AST MODULE ===");
+    println!("\n=== AST ===");
     println!("{:#?}", ast_module);
-
-    println!("\n=== AST TYPES ===");
-    println!("{:#?}", ast_types);
-
-    println!("\n=== AST FUNCTIONS ===");
-    println!("{:#?}", ast_functions);
 
     println!("\n=== WARNINGS ===");
     println!("{:#?}", warnings);
