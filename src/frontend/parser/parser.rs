@@ -163,33 +163,37 @@ impl Parser {
     pub fn eat(
         &mut self,
         kind: Option<TokenKind>,
-        lexeme: Option<&str>,
+        val: Option<&str>,
     ) -> Result<Token, ParserError> {
-        let token = self.current().cloned().ok_or_else(|| {
-            ParserError::new(
-                "NXD-P1000",
-                "Unexpected end of input",
-                SourceSpan {
-                    line: 0,
-                    column: 0,
-                    end_line: 0,
-                    end_column: 0,
-                },
-            )
-        })?;
-        if !self.at(kind, lexeme) {
-            return Err(ParserError::new(
-                "NXD-P1001",
-                format!("unexpected token '{}'", token.lexeme),
-                token.span(),
-            ));
+        let token = self.current().cloned().unwrap();
+
+        if let Some(expected_kind) = kind {
+            if token.kind != expected_kind {
+                return Err(ParserError::new(
+                    "NXD-P1001",
+                    format!(
+                        "NXD-P1001: Expected {:?}, got {:?}",
+                        expected_kind, token.kind,
+                    ),
+                    token.span(),
+                ));
+            }
+        }
+
+        if let Some(expected_val) = val {
+            if token.lexeme != expected_val {
+                return Err(ParserError::new(
+                    "NXD-P1002",
+                    format!("NXD-P1002: Expected {}, got {}", expected_val, token.lexeme,),
+                    token.span(),
+                ));
+            }
         }
 
         self.advance();
 
         Ok(token)
     }
-
     // Parser entry points
 
     pub fn parse_program(&mut self) -> Result<AstModule, ParserError> {
