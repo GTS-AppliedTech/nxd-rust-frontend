@@ -1,0 +1,72 @@
+{
+  "module": {
+    "name": "TEST",
+    "imports": []
+  },
+  "types": [],
+  "traits": [],
+  "impls": [],
+  "functions": [
+    {
+      "name": "MAIN",
+      "span": {
+        "line": 3,
+        "column": 1,
+        "end_line": 6,
+        "end_column": 20
+      },
+      "params": [],
+      "return_type": null,
+      "is_async": false,
+      "body": [
+        {
+          "Let": {
+            "name": "VALUES",
+            "value": {
+              "Literal": {
+                "List": [
+                  {
+                    "Literal": {
+                      "Int": 1
+                    }
+                  },
+                  {
+                    "Literal": {
+                      "Int": 2
+                    }
+                  },
+                  {
+                    "Literal": {
+                      "Int": 3
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Expr": {
+            "Call": {
+              "func": "PRINTLN",
+              "args": [
+                {
+                  "Var": {
+                    "name": "VALUES",
+                    "span": {
+                      "line": 6,
+                      "column": 13,
+                      "end_line": 6,
+                      "end_column": 19
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "statements": []
+}

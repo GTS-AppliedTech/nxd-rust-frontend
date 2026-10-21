@@ -1,0 +1,65 @@
+{
+  "module": {
+    "name": "ANONYMOUS",
+    "imports": []
+  },
+  "types": [],
+  "traits": [],
+  "impls": [],
+  "functions": [
+    {
+      "name": "FETCH",
+      "span": {
+        "line": 1,
+        "column": 7,
+        "end_line": 3,
+        "end_column": 2
+      },
+      "params": [],
+      "return_type": null,
+      "is_async": true,
+      "body": [
+        {
+          "Return": {
+            "Literal": {
+              "Int": 42
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MAIN",
+      "span": {
+        "line": 4,
+        "column": 7,
+        "end_line": 5,
+        "end_column": 29
+      },
+      "params": [],
+      "return_type": null,
+      "is_async": true,
+      "body": [
+        {
+          "Let": {
+            "name": "X",
+            "value": {
+              "Call": {
+                "func": "AWAIT",
+                "args": [
+                  {
+                    "Call": {
+                      "func": "FETCH",
+                      "args": []
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "statements": []
+}

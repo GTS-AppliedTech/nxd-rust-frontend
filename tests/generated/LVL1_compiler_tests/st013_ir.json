@@ -1,0 +1,48 @@
+{
+  "module": {
+    "name": "TEST",
+    "imports": []
+  },
+  "types": [],
+  "traits": [],
+  "impls": [],
+  "functions": [
+    {
+      "name": "MAIN",
+      "span": {
+        "line": 3,
+        "column": 1,
+        "end_line": 7,
+        "end_column": 2
+      },
+      "params": [],
+      "return_type": null,
+      "is_async": false,
+      "body": [
+        {
+          "Let": {
+            "name": "P",
+            "value": {
+              "ObjectInit": {
+                "type_name": "PERSON",
+                "fields": {
+                  "NAME": {
+                    "Literal": {
+                      "String": "gabriel"
+                    }
+                  },
+                  "AGE": {
+                    "Literal": {
+                      "Int": 42
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "statements": []
+}

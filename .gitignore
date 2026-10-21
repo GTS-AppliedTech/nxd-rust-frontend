@@ -1,23 +1,61 @@
+# =========================
 # Rust
+# =========================
 /target
 Cargo.lock
 
-# VS Code
+# =========================
+# Editors
+# =========================
 .vscode/
+.idea/
+*.swp
+*.swo
 
-# Python (comparison scripts)
+# =========================
+# Python Utilities
+# =========================
 __pycache__/
-*.pyc
+*.py[cod]
 
-# Generated artifacts
-*.json
+# =========================
+# Generated Compiler Artifacts
+# =========================
 *.ast
 *.ir
+*.ir.json
+*.nim
 
-# Test outputs
-/output
-/generated
+/output/
+/generated/
 
-# OS
+# =========================
+# Environment
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Temporary Files
+# =========================
+tmp/
+temp/
+*.tmp
+
+# =========================
+# Operating Systems
+# =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# Nim
+# =========================
+nimcache/
+nimblecache/

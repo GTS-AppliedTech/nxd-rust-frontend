@@ -1,0 +1,118 @@
+{
+  "module": {
+    "name": "TEST",
+    "imports": []
+  },
+  "types": [],
+  "traits": [],
+  "impls": [],
+  "functions": [
+    {
+      "name": "MAIN",
+      "span": {
+        "line": 3,
+        "column": 1,
+        "end_line": 8,
+        "end_column": 19
+      },
+      "params": [],
+      "return_type": null,
+      "is_async": false,
+      "body": [
+        {
+          "Const": {
+            "name": "NAMES",
+            "value": {
+              "Literal": {
+                "List": [
+                  {
+                    "Literal": {
+                      "String": "ALPHA"
+                    }
+                  },
+                  {
+                    "Literal": {
+                      "String": "BETA"
+                    }
+                  },
+                  {
+                    "Literal": {
+                      "String": "GAMMA"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Const": {
+            "name": "FLAGS",
+            "value": {
+              "Literal": {
+                "List": [
+                  {
+                    "Literal": {
+                      "Bool": true
+                    }
+                  },
+                  {
+                    "Literal": {
+                      "Bool": false
+                    }
+                  },
+                  {
+                    "Literal": {
+                      "Bool": true
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Expr": {
+            "Call": {
+              "func": "PRINTLN",
+              "args": [
+                {
+                  "Var": {
+                    "name": "NAMES",
+                    "span": {
+                      "line": 7,
+                      "column": 13,
+                      "end_line": 7,
+                      "end_column": 18
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Expr": {
+            "Call": {
+              "func": "PRINTLN",
+              "args": [
+                {
+                  "Var": {
+                    "name": "FLAGS",
+                    "span": {
+                      "line": 8,
+                      "column": 13,
+                      "end_line": 8,
+                      "end_column": 18
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "statements": []
+}
