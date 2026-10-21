@@ -1,5 +1,8 @@
 use crate::frontend::parser::parser::parse;
+use crate::frontend::warnings::find_shadowed_bindings;
+use crate::frontend::warnings::find_unreachable_code;
 use crate::frontend::warnings::find_unused_variables;
+
 use crate::ir::lowering::*;
 use crate::ir::nodes::*;
 
@@ -8,7 +11,9 @@ use serde_json::to_string_pretty;
 pub fn compile_to_ir(src: &str) -> Result<IRRoot, Box<dyn std::error::Error>> {
     let (ast_module, ast_types, ast_functions) = parse(src)?;
 
-    let warnings = find_unused_variables(&ast_module);
+    let mut warnings = find_unused_variables(&ast_module);
+    warnings.extend(find_unreachable_code(&ast_module));
+    warnings.extend(find_shadowed_bindings(&ast_module));
 
     println!("\n=== AST ===");
     println!("{:#?}", ast_module);
