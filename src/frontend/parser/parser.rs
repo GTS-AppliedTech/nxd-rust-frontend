@@ -233,7 +233,72 @@ impl Parser {
     // Top level grammer
 
     pub fn parse_module(&mut self) -> Result<AstModule, ParserError> {
-        todo!()
+        self.eat(Some(TokenKind::Keyword), Some("MODULE"))?;
+
+        let name_token = self.eat(Some(TokenKind::Ident), None)?;
+
+        let name = name_token.lexeme;
+
+        let mut imports = Vec::new();
+        let mut body = Vec::new();
+
+        while !self.at_end() {
+            if self.at(Some(TokenKind::Newline), None) {
+                self.eat(Some(TokenKind::Newline), None)?;
+
+                continue;
+            }
+
+            if self.at(Some(TokenKind::Keyword), Some("IMPORT")) {
+                match self.parse_import() {
+                    Ok(import) => {
+                        imports.push(import);
+                    }
+
+                    Err(error) => {
+                        if !self.recover_errors {
+                            return Err(error);
+                        }
+
+                        self.report_error(error.clone());
+
+                        println!(
+                            "Collected: {} {} {}:{}",
+                            error.code, error.message, error.span.line, error.span.column,
+                        );
+
+                        self.synchronize();
+                    }
+                }
+
+                continue;
+            }
+            match self.parse_top_level() {
+                Ok(node) => {
+                    body.push(node);
+                }
+
+                Err(error) => {
+                    if !self.recover_errors {
+                        return Err(error);
+                    }
+
+                    self.report_error(error.clone());
+
+                    println!(
+                        "Collected: {} {} {}:{}",
+                        error.code, error.message, error.span.line, error.span.column,
+                    );
+
+                    self.synchronize();
+                }
+            }
+        }
+        Ok(AstModule {
+            name,
+            imports,
+            body,
+        })
     }
 
     pub fn parse_import(&mut self) -> Result<AstImport, ParserError> {
