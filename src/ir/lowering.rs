@@ -1,14 +1,9 @@
-use crate::frontend::ast::nodes::{self as ast, SourceSpan as AstSourceSpan, *};
+use crate::diagnostics::span::SourceSpan;
+use crate::frontend::ast::nodes::*;
+use crate::ir::nodes::*;
 
-use crate::ir::nodes::{self as ir, SourceSpan as IRSourceSpan, *};
-
-fn lower_span(span: &AstSourceSpan) -> IRSourceSpan {
-    IRSourceSpan {
-        line: span.line,
-        column: span.column,
-        end_line: span.end_line,
-        end_column: span.end_column,
-    }
+fn lower_span(span: &SourceSpan) -> SourceSpan {
+    span.clone()
 }
 
 pub fn lower_module(ast: &AstModule) -> IRModule {
@@ -127,7 +122,7 @@ pub fn lower_trait(ast: &AstTrait) -> IRTrait {
 pub fn lower_function(ast: &AstFunction) -> IRFunction {
     IRFunction {
         name: ast.name.clone(),
-        span: lower_span(&ast.span),
+        span: ast.span.clone(),
 
         params: ast
             .params
@@ -241,7 +236,7 @@ pub fn lower_expr(ast: &AstExpr) -> IRExpr {
         AstExpr::Var(var) => IRExpr::Var(IRVar {
             name: var.name.clone(),
 
-            span: IRSourceSpan {
+            span: SourceSpan {
                 line: var.line,
                 column: var.column,
                 end_line: var.line,

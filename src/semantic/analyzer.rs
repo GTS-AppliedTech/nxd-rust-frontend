@@ -1,7 +1,8 @@
+use crate::diagnostics::errors::*;
+use crate::diagnostics::span::SourceSpan;
 use crate::ir::nodes::*;
 use crate::semantic::{
     casts::{check_as_cast, check_is},
-    errors::{AsyncViolation, SemanticError},
     ownership::{OwnershipOp, check_ownership},
     patterns::validate_match_arms,
     symbols::{Symbol, SymbolTable},

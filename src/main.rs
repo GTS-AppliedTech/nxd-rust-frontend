@@ -1,4 +1,5 @@
 mod backend;
+mod diagnostics;
 mod frontend;
 mod ir;
 mod orchestrator;

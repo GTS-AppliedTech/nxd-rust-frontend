@@ -1,17 +1,11 @@
+use crate::diagnostics::span::SourceSpan;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt;
+
 // ===============================
 // IR MODULE
 // ===============================
-
-#[derive(Clone, Debug, Serialize)]
-pub struct SourceSpan {
-    pub line: u32,
-    pub column: u32,
-    pub end_line: u32,
-    pub end_column: u32,
-}
 
 #[derive(Clone, Debug, Serialize)]
 pub struct IRRoot {

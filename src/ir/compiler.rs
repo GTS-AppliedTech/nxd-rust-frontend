@@ -1,7 +1,7 @@
+use crate::diagnostics::warnings::find_shadowed_bindings;
+use crate::diagnostics::warnings::find_unreachable_code;
+use crate::diagnostics::warnings::find_unused_variables;
 use crate::frontend::parser::parser::parse;
-use crate::frontend::warnings::find_shadowed_bindings;
-use crate::frontend::warnings::find_unreachable_code;
-use crate::frontend::warnings::find_unused_variables;
 
 use crate::ir::lowering::*;
 use crate::ir::nodes::*;

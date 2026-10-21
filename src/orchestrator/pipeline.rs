@@ -1,8 +1,8 @@
 use crate::backend::nim::emitter;
+use crate::diagnostics::diagnostics::{SemanticDiagnostic, SemanticDiagnosticResponse};
+use crate::diagnostics::errors::SemanticError;
 use crate::ir::nodes::IRRoot;
 use crate::semantic::analyzer::Analyzer;
-use crate::semantic::diagnostics::{SemanticDiagnostic, SemanticDiagnosticResponse};
-use crate::semantic::errors::SemanticError;
 use crate::semantic::symbols::Symbol;
 use crate::semantic::traits::TraitRegistry;
 

@@ -1,5 +1,7 @@
+use crate::diagnostics::severity::DiagnosticSeverity;
+use crate::diagnostics::span::SourceSpan;
+use crate::diagnostics::types::WarningDiagnostic;
 use crate::frontend::ast::nodes::*;
-use crate::frontend::parser::parser::{DiagnosticSeverity, WarningDiagnostic};
 
 use std::collections::{HashMap, HashSet};
 
@@ -433,4 +435,15 @@ pub fn find_unused_imports(_module: &AstModule) -> Vec<WarningDiagnostic> {
     let warnings = Vec::new();
 
     warnings
+}
+
+impl WarningDiagnostic {
+    pub fn new(code: impl Into<String>, message: impl Into<String>, span: SourceSpan) -> Self {
+        Self {
+            code: code.into(),
+            message: message.into(),
+            span,
+            severity: DiagnosticSeverity::Warning,
+        }
+    }
 }

@@ -1,4 +1,4 @@
-use crate::frontend::ast::nodes::SourceSpan;
+use crate::diagnostics::span::SourceSpan;
 use crate::frontend::lexer::token_kind::TokenKind;
 
 impl Token {
