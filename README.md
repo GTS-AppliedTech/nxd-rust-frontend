@@ -208,12 +208,3 @@ For the current NXD compiler, language server, validation infrastructure, and ac
 This repository remains available as a record of the architecture and implementation that existed before the completed all-Rust compiler migration.
 
 
-### Main changes
-
-- Changed the repository status from **Active Migration** to **Archived**.
-- Marked every migration objective as completed.
-- Identified `nxd_language` as the active and authoritative repository.
-- Explained that this repository now contains the former `nxd_language` implementation.
-- Documented the old Python-to-JSON-to-Rust pipeline without presenting it as active.
-- Added warnings against treating old Rust files as compatible with the current architecture.
-- Recorded the completed Rust frontend, native IR handoff, backend integration, parity validation, and Rust LSP migration.
