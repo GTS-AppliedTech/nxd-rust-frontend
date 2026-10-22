@@ -195,22 +195,9 @@ function validateDocument(document, diagnostics) {
     }
 
     if (result.stderr && result.stderr.trim()) {
-        problems.push(
-            createDiagnostic(
-                document,
-                1,
-                1,
-                null,
-                null,
-                `NXD parser error: ${result.stderr.trim()}`,
-                vscode.DiagnosticSeverity.Error, 'NXD'
-            )
-        );
-
-        diagnostics.set(document.uri, problems);
-        return;
+        console.error(result.stderr);
     }
-
+    
     try {
         const response = JSON.parse(result.stdout.trim());
 

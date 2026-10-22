@@ -382,7 +382,7 @@ mod tests {
         let ast = AstFunction {
             name: "TEST".to_string(),
 
-            span: AstSourceSpan {
+            span: SourceSpan {
                 line: 1,
                 column: 1,
                 end_line: 1,

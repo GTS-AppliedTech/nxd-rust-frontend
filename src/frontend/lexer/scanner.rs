@@ -65,9 +65,9 @@ pub fn strip_line_comments(source: &str) -> String {
 pub fn lex(src: &str) -> Result<Vec<Token>, String> {
     let src = strip_line_comments(src);
 
-    println!("=== STRIPPED SOURCE ===");
-    println!("{}", src);
-    println!("=======================");
+    eprintln!("=== STRIPPED SOURCE ===");
+    eprintln!("{}", src);
+    eprintln!("=======================");
 
     // Compile each TOKEN_SPEC entry as a regex that must match
     // at the beginning of the remaining source.

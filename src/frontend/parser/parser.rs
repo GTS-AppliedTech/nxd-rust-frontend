@@ -213,7 +213,7 @@ impl Parser {
 
                         self.report_error(error.clone());
 
-                        println!(
+                        eprintln!(
                             "Collected: {} {} {}:{}",
                             error.code, error.message, error.span.line, error.span.column,
                         );
@@ -236,7 +236,7 @@ impl Parser {
 
                     self.report_error(error.clone());
 
-                    println!(
+                    eprintln!(
                         "Collected: {} {} {}:{}",
                         error.code, error.message, error.span.line, error.span.column,
                     );
