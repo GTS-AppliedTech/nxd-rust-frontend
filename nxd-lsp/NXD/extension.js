@@ -153,24 +153,22 @@ function validateDocument(document, diagnostics) {
 
     const validatorPath = path.join(
         workspaceRoot,
-        'lsp_validate.py'
+        'target',
+        'debug',
+        'lsp_validate'
     );
 
-    const pythonCmd =
-        process.platform === 'win32'
-            ? 'python'
-            : 'python3';
-
     const result = cp.spawnSync(
-        pythonCmd,
-        [validatorPath],
+        validatorPath,
+        [],
         {
             cwd: workspaceRoot,
             input: source,
             encoding: 'utf8',
             windowsHide: true
         }
-    );
+    );   
+    
     // extension.js is:
     // nxd_language/nxd-lsp/NXD/extension.js
     //
