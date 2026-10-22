@@ -11,9 +11,9 @@
       "name": "MAIN",
       "span": {
         "line": 3,
-        "column": 1,
-        "end_line": 8,
-        "end_column": 19
+        "column": 6,
+        "end_line": 3,
+        "end_column": 10
       },
       "params": [],
       "return_type": null,
@@ -26,19 +26,13 @@
               "Literal": {
                 "List": [
                   {
-                    "Literal": {
-                      "String": "ALPHA"
-                    }
+                    "String": "ALPHA"
                   },
                   {
-                    "Literal": {
-                      "String": "BETA"
-                    }
+                    "String": "BETA"
                   },
                   {
-                    "Literal": {
-                      "String": "GAMMA"
-                    }
+                    "String": "GAMMA"
                   }
                 ]
               }
@@ -52,19 +46,13 @@
               "Literal": {
                 "List": [
                   {
-                    "Literal": {
-                      "Bool": true
-                    }
+                    "Bool": true
                   },
                   {
-                    "Literal": {
-                      "Bool": false
-                    }
+                    "Bool": false
                   },
                   {
-                    "Literal": {
-                      "Bool": true
-                    }
+                    "Bool": true
                   }
                 ]
               }

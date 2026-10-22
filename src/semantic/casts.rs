@@ -1,4 +1,4 @@
-use crate::diagnostics::errors::SemanticError;
+use crate::semantic::errors::SemanticError;
 
 pub fn check_as_cast(from: &str, to: &str) -> Result<(), SemanticError> {
     match (from, to) {

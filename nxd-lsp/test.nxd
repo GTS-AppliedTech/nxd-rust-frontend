@@ -1,0 +1,5 @@
+FUNC MAIN():
+    LET X SET 123
+    LET Y SET "hello"
+
+    LET Z SET X ADD Y

@@ -153,22 +153,24 @@ function validateDocument(document, diagnostics) {
 
     const validatorPath = path.join(
         workspaceRoot,
-        'target',
-        'debug',
-        'lsp_validate'
+        'lsp_validate.py'
     );
 
+    const pythonCmd =
+        process.platform === 'win32'
+            ? 'python'
+            : 'python3';
+
     const result = cp.spawnSync(
-        validatorPath,
-        [],
+        pythonCmd,
+        [validatorPath],
         {
             cwd: workspaceRoot,
             input: source,
             encoding: 'utf8',
             windowsHide: true
         }
-    );   
-    
+    );
     // extension.js is:
     // nxd_language/nxd-lsp/NXD/extension.js
     //
@@ -195,9 +197,22 @@ function validateDocument(document, diagnostics) {
     }
 
     if (result.stderr && result.stderr.trim()) {
-        console.error(result.stderr);
+        problems.push(
+            createDiagnostic(
+                document,
+                1,
+                1,
+                null,
+                null,
+                `NXD parser error: ${result.stderr.trim()}`,
+                vscode.DiagnosticSeverity.Error, 'NXD'
+            )
+        );
+
+        diagnostics.set(document.uri, problems);
+        return;
     }
-    
+
     try {
         const response = JSON.parse(result.stdout.trim());
 

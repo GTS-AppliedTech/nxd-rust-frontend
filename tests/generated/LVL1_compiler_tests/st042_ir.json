@@ -11,9 +11,9 @@
       "name": "FETCH",
       "span": {
         "line": 1,
-        "column": 7,
+        "column": 12,
         "end_line": 1,
-        "end_column": 20
+        "end_column": 17
       },
       "params": [],
       "return_type": null,

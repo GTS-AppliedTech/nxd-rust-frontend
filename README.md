@@ -1,53 +1,219 @@
 # nxd-rust-frontend
 
-Status: Active Migration
+Status: Archived
 
-This repository contains the ongoing Rust frontend rewrite of the NXD compiler.
+This repository previously served as the development and validation environment for migrating the NXD compiler frontend from Python to Rust.
 
-The Python frontend (in the nxd_language repository) remains the reference implementation during migration and parity testing.
+The migration is now complete.
 
-Current status:
+The completed Rust frontend, Rust compiler backend, and Rust Language Server Protocol implementation have been transferred into the primary `nxd_language` repository.
 
-- Lexer complete
-- Parser complete
-- AST complete
-- IR migration in progress
-- Builds successfully
-- Tests passing
+This repository now serves as an archive of the former `nxd_language` implementation and repository structure.
 
-Development repository for the NXD Rust frontend.
+## Migration Result
 
-This project reimplements the existing Python lexer, parser, IR, and AST pipeline from the main NXD compiler in Rust.
+The NXD compiler migration successfully completed the following:
 
-The current Python frontend serves as the reference implementation while functionality is ported and validated through parity testing.
-
-## Background
-
-NXD currently uses a Python frontend and a Rust compiler core connected through
-a JSON IR handoff. While this architecture enabled rapid language development,
-it also requires maintaining compiler structures across language boundaries and
-introduces additional serialization, debugging, and synchronization overhead.
-
-The goal of this project is to evaluate a fully Rust-based frontend while
-preserving existing language semantics and compiler behavior.
-
-## Goals
-
-- Rust lexer
+- Rust scanner
 - Rust parser
 - Rust AST
-- Rust IR
-- JSON IR compatibility
-- Feature parity with the Python frontend
-- Preservation of current compiler semantics and diagnostics
+- Rust IR lowering
+- Native Rust IR construction
+- Rust semantic integration
+- Rust backend integration
+- Rust diagnostic integration
+- Rust Language Server Protocol implementation
+- Frontend behavioral parity
+- Validation-suite parity
+- Removal of the active Python-to-JSON-to-Rust handoff
 
-## Status
+The active NXD compiler is now implemented as a unified Rust pipeline:
 
-Experimental.
 
-This repository is a frontend migration and validation environment.
-The Python frontend in the `nxd_language` repository remains the reference implementation until feature parity and stability have been demonstrated. Once stability has been demonstrated, the new code will be migrated into the `nxd_language` repository to be a replacement implementation for the current Python frontend. 
+NXD Source
+→ Rust Scanner
+→ Rust Parser
+→ Rust AST
+→ Rust Lowering
+→ IR Root
+→ NXD Semantics
+→ Backend Transpilation
 
-## Validation Strategy
 
-The Rust frontend is validated against the existing NXD test corpus to ensure matching parser output and compiler behavior.
+JSON output may still be generated for debugging, inspection, testing, and compiler analysis, but JSON serialization and rehydration are no longer required as the internal handoff between the frontend and semantic backend.
+
+Repository Purpose
+
+This repository is no longer the active development location for the NXD Rust frontend.
+
+It now preserves the former nxd_language repository contents as an archived reference.
+
+The archived implementation provides:
+
+A historical record of the previous compiler architecture
+The former Python frontend
+The previous Python-to-JSON-to-Rust compiler pipeline
+Earlier Rust compiler and backend components
+Previous AST, IR, semantic, and diagnostic structures
+A reference point for regression analysis
+A comparison point for future compiler validation
+Historical context for the completed Rust migration
+
+The contents of this repository should not be assumed to represent the current active NXD compiler architecture.
+
+Migration Background
+
+Before the migration, NXD used a Python frontend and a Rust compiler backend connected through a JSON IR handoff:
+
+Python Scanner
+→ Python Parser
+→ Python AST
+→ Python Lowering
+→ IR JSON
+→ Rust Loader
+→ IR Root
+→ NXD Semantics
+→ Backend Transpilation
+
+
+This architecture enabled the initial development of the NXD language, but it also required compiler structures to be maintained across Python and Rust.
+
+The serialized handoff introduced additional:
+
+Data structure duplication
+Serialization and deserialization
+Frontend and backend synchronization
+Cross-language debugging
+IR schema maintenance
+Diagnostic propagation complexity
+
+The nxd-rust-frontend repository was created as an isolated migration environment where the frontend could be rewritten and validated without disrupting the working implementation in nxd_language.
+
+Migration Goals
+
+The migration was developed around the following goals:
+
+Reimplement the NXD scanner in Rust
+Reimplement the NXD parser in Rust
+Reimplement the NXD AST in Rust
+Reimplement AST-to-IR lowering in Rust
+Preserve existing NXD language behavior
+Preserve compiler semantics
+Preserve diagnostic behavior
+Maintain compatibility with the existing semantic analyzer
+Maintain compatibility with the existing backend
+Validate the Rust implementation against the NXD test corpus
+Remove the active JSON rehydration boundary
+Preserve JSON as an optional debugging artifact
+Migrate the NXD Language Server Protocol implementation to Rust
+Establish behavioral parity with the Python frontend
+Transfer the completed implementation into nxd_language
+
+These goals have been completed.
+
+Validation Strategy
+
+During migration, the Rust implementation was tested against the existing NXD validation corpus.
+
+Validation focused on preserving:
+
+Scanner behavior
+Token production
+Parser behavior
+AST construction
+IR lowering
+IR structure
+Source span propagation
+Warning generation
+Parser diagnostics
+Semantic diagnostics
+Backend integration
+Positive test behavior
+Negative test behavior
+Specialty backend behavior
+Language Server Protocol behavior
+
+The former Python implementation served as the behavioral reference while each compiler stage was migrated.
+
+After parity was achieved, the completed Rust implementation became the active compiler in the primary nxd_language repository.
+
+Language Server Migration
+
+The NXD Language Server Protocol implementation was also migrated to Rust.
+
+The active editor diagnostic pipeline now follows the unified Rust architecture:
+
+Editor
+→ Rust Language Server
+→ Rust Compiler Frontend
+→ IR Root
+→ NXD Semantics
+→ Diagnostics
+→ Editor Response
+
+
+This allows the command-line compiler and editor tooling to use the same frontend, semantic analyzer, source spans, and diagnostic infrastructure.
+
+Current Development
+
+Active NXD compiler development now occurs in the nxd_language repository.
+
+That repository contains the authoritative versions of the:
+
+Rust scanner
+Rust parser
+Rust AST
+Rust lowering pipeline
+Rust IR
+Semantic analyzer
+Diagnostic infrastructure
+Compiler orchestration
+Backend implementations
+Rust language server
+Validation suites
+
+This archived repository should not receive active compiler features unless required for historical preservation, archival corrections, or documentation maintenance.
+
+Archive Status
+
+The code preserved here represents an earlier stage of NXD development.
+
+It may contain:
+
+Superseded compiler structures
+Previous file locations
+Earlier dependency definitions
+Deprecated integration boundaries
+Files intentionally omitted from the active compiler
+Files that were reduced, consolidated, or relocated during migration
+Historical Rust components that should not be mixed with the current implementation
+Python components retained for reference
+
+The repository is preserved for historical and technical reference and is not the authoritative source for current NXD compiler behavior.
+
+Status Summary
+Rust Frontend Migration: Complete
+Frontend Behavioral Parity: Achieved
+Rust Backend Integration: Complete
+Native Rust IR Handoff: Complete
+Rust LSP Migration: Complete
+Primary Repository Transfer: Complete
+Active Development Repository: nxd_language
+Repository Role: Archived Reference
+
+Notice
+
+For the current NXD compiler, language server, validation infrastructure, and active development history, refer to the primary nxd_language repository.
+
+This repository remains available as a record of the architecture and implementation that existed before the completed all-Rust compiler migration.
+
+
+### Main changes
+
+- Changed the repository status from **Active Migration** to **Archived**.
+- Marked every migration objective as completed.
+- Identified `nxd_language` as the active and authoritative repository.
+- Explained that this repository now contains the former `nxd_language` implementation.
+- Documented the old Python-to-JSON-to-Rust pipeline without presenting it as active.
+- Added warnings against treating old Rust files as compatible with the current architecture.
+- Recorded the completed Rust frontend, native IR handoff, backend integration, parity validation, and Rust LSP migration.

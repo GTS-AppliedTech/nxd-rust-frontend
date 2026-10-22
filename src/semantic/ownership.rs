@@ -1,4 +1,4 @@
-use crate::diagnostics::errors::SemanticError;
+use crate::semantic::errors::SemanticError;
 
 pub enum OwnershipOp {
     Move,

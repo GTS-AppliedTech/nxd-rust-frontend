@@ -1,4 +1,4 @@
-use crate::diagnostics::span::SourceSpan;
+use crate::ir::nodes::SourceSpan;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]

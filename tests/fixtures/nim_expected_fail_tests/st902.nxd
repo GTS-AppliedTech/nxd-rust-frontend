@@ -1,4 +1,0 @@
-FUNC MAIN()
-    LET X SET Y
-
-    //expected S3001 & W2001
