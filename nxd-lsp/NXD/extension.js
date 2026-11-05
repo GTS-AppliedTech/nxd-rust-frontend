@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const cp = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 function activate(context) {
     const diagnostics =
@@ -10,7 +11,11 @@ function activate(context) {
 
     const validate = document => {
         if (document.languageId === 'nxd') {
-            validateDocument(document, diagnostics);
+            validateDocument(
+                document,
+                diagnostics,
+                context.extensionPath
+            );
         }
     };
 
@@ -141,7 +146,7 @@ function activate(context) {
     );
 }
 
-function validateDocument(document, diagnostics) {
+function validateDocument(document, diagnostics, extensionPath) {
     const source = document.getText();
 
     const workspaceRoot =
@@ -151,19 +156,74 @@ function validateDocument(document, diagnostics) {
         return;
     }
 
-    const validatorPath = path.join(
+    const localValidator = path.join(
         workspaceRoot,
-        'lsp_validate.py'
+        'target',
+        'debug',
+        'lsp_validate'
     );
 
-    const pythonCmd =
-        process.platform === 'win32'
-            ? 'python'
-            : 'python3';
+    const cargoValidator = path.join(
+        process.env.HOME || '',
+        '.cargo',
+        'bin',
+        'lsp_validate'
+    );
+
+    let bundledValidator;
+
+    if (process.platform === 'win32') {
+        bundledValidator = path.join(
+            extensionPath,
+            'bin',
+            'windows-x64',
+            'lsp_validate.exe'
+        );
+    } else {
+        bundledValidator = path.join(
+            extensionPath,
+            'bin',
+            'linux-x64',
+            'lsp_validate'
+        );
+    }
+
+    let validatorPath = null;
+
+    if (fs.existsSync(localValidator)) {
+        validatorPath = localValidator;
+    } else if (fs.existsSync(cargoValidator)) {
+        validatorPath = cargoValidator;
+    } else if (fs.existsSync(bundledValidator)) {
+        validatorPath = bundledValidator;
+    }
+
+    const problems = [];
+
+    if (!validatorPath) {
+        problems.push(
+            createDiagnostic(
+                document,
+                1,
+                1,
+                null,
+                null,
+                'NXD validator not found. Build nxd_language or install the NXD toolchain.',
+                vscode.DiagnosticSeverity.Error,
+                'NXD'
+            )
+        );
+
+        diagnostics.set(document.uri, problems);
+        return;
+    }
+
+    console.log('workspaceRoot =', workspaceRoot);
+    console.log('validatorPath =', validatorPath);
 
     const result = cp.spawnSync(
-        pythonCmd,
-        [validatorPath],
+        validatorPath,
+        [],
         {
             cwd: workspaceRoot,
             input: source,
@@ -171,13 +231,6 @@ function validateDocument(document, diagnostics) {
             windowsHide: true
         }
     );
-    // extension.js is:
-    // nxd_language/nxd-lsp/NXD/extension.js
-    //
-    // lsp_validate.py is:
-    // nxd_language/lsp_validate.py
-
-    const problems = [];
 
     if (result.error) {
         problems.push(
@@ -188,7 +241,8 @@ function validateDocument(document, diagnostics) {
                 null,
                 null,
                 `NXD parser could not start: ${result.error.message}`,
-                vscode.DiagnosticSeverity.Error, 'NXD'
+                vscode.DiagnosticSeverity.Error,
+                'NXD'
             )
         );
 
@@ -197,20 +251,7 @@ function validateDocument(document, diagnostics) {
     }
 
     if (result.stderr && result.stderr.trim()) {
-        problems.push(
-            createDiagnostic(
-                document,
-                1,
-                1,
-                null,
-                null,
-                `NXD parser error: ${result.stderr.trim()}`,
-                vscode.DiagnosticSeverity.Error, 'NXD'
-            )
-        );
-
-        diagnostics.set(document.uri, problems);
-        return;
+        console.error(result.stderr);
     }
 
     try {
@@ -244,7 +285,8 @@ function validateDocument(document, diagnostics) {
                 null,
                 null,
                 `Invalid response from NXD parser: ${error.message}`,
-                vscode.DiagnosticSeverity.Error, 'NXD'
+                vscode.DiagnosticSeverity.Error,
+                'NXD'
             )
         );
     }
