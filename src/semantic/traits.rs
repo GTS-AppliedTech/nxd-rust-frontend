@@ -1,5 +1,5 @@
+use crate::diagnostics::errors::SemanticError;
 use crate::ir::nodes::{IRImpl, IRTrait};
-use crate::semantic::errors::SemanticError;
 
 pub struct TraitRegistry {
     pub traits: Vec<IRTrait>,
@@ -11,6 +11,13 @@ impl TraitRegistry {
         Self {
             traits: Vec::new(),
             impls: Vec::new(),
+        }
+    }
+
+    pub fn from_ir(traits: &[IRTrait], impls: &[IRImpl]) -> Self {
+        Self {
+            traits: traits.to_vec(),
+            impls: impls.to_vec(),
         }
     }
 

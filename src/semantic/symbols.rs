@@ -1,4 +1,4 @@
-use crate::ir::nodes::SourceSpan;
+use crate::diagnostics::span::SourceSpan;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -20,6 +20,7 @@ pub enum Symbol {
     },
     Type {
         name: String,
+        fields: HashMap<String, String>,
     },
     Trait {
         name: String,
